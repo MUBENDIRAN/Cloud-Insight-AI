@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Insight AI Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Cloud Insight AI</h1>
+            <div class="header-controls">
+                <span id="last-updated"></span>
+                <button id="refresh-btn">Refresh Data</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="status-banner" class="card">
+            <h2>Overall Status: <span id="status-indicator"></span></h2>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="card">
+                <h2>Cost Insights</h2>
+                <p id="cost-summary">Fetching data...</p>
+            </section>
+
+            <section class="card">
+                <h2>Log Insights</h2>
+                <p id="log-summary">Fetching data...</p>
+            </section>
+
+            <section class="card">
+                <h2>Sentiment Analysis</h2>
+                <div class="sentiment-display">
+                    <span id="sentiment-emoji"></span>
+                    <p id="sentiment">Fetching data...</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Operational Counts</h2>
+                <div class="counts-grid">
+                    <div class="count-item">
+                        <h3>Errors</h3>
+                        <span id="error-count" class="badge badge-error">0</span>
+                    </div>
+                    <div class="count-item">
+                        <h3>Warnings</h3>
+                        <span id="warning-count" class="badge badge-warning">0</span>
+                    </div>
+                    <div class="count-item">
+                        <h3>Trend</h3>
+                        <span id="trend-indicator">→</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card full-width">
+                <h2>Recommendations</h2>
+                <ul id="recommendations">
+                    <li>Fetching data...</li>
+                </ul>
+            </section>
+        </div>
+        
+        <div id="error-message" class="error-hidden">
+            <p>Failed to fetch dashboard data. Please check the S3 URL and file permissions.</p>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
