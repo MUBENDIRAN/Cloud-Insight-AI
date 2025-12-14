@@ -37,6 +37,9 @@
 
             <section class="card">
                 <h2>Sentiment Analysis</h2>
+                <div class="sentiment-meter">
+                    <div id="sentiment-meter-bar"></div>
+                </div>
                 <div class="sentiment-display">
                     <span id="sentiment-emoji"></span>
                     <p id="sentiment">Fetching data...</p>
@@ -44,15 +47,23 @@
             </section>
 
             <section class="card">
-                <h2>Operational Counts</h2>
+                <h2>Log Levels & Trend</h2>
                 <div class="counts-grid">
                     <div class="count-item">
-                        <h3>Errors</h3>
+                        <h3>Critical</h3>
+                        <span id="critical-count" class="badge badge-critical">0</span>
+                    </div>
+                    <div class="count-item">
+                        <h3>Error</h3>
                         <span id="error-count" class="badge badge-error">0</span>
                     </div>
                     <div class="count-item">
-                        <h3>Warnings</h3>
+                        <h3>Warning</h3>
                         <span id="warning-count" class="badge badge-warning">0</span>
+                    </div>
+                     <div class="count-item">
+                        <h3>Info</h3>
+                        <span id="info-count" class="badge badge-info">0</span>
                     </div>
                     <div class="count-item">
                         <h3>Trend</h3>
@@ -66,6 +77,13 @@
                 <ul id="recommendations">
                     <li>Fetching data...</li>
                 </ul>
+            </section>
+            
+            <section class="card full-width">
+                <h2>Current Configuration</h2>
+                <div id="config-details">
+                    <p>Fetching configuration...</p>
+                </div>
             </section>
         </div>
         

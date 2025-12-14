@@ -129,10 +129,28 @@ main {
 .sentiment-neutral { color: #3498db; }
 .sentiment-negative { color: #e74c3c; }
 
+/* Sentiment Meter */
+.sentiment-meter {
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    height: 20px;
+    width: 100%;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+#sentiment-meter-bar {
+    height: 100%;
+    width: 0; /* Set by JS */
+    border-radius: 5px;
+    transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out;
+}
+
 /* Counts & Badges */
 .counts-grid {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 15px;
     text-align: center;
 }
 
@@ -145,19 +163,23 @@ main {
 
 .badge {
     display: inline-block;
-    padding: 8px 15px;
+    padding: 8px 12px;
     border-radius: 20px;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-weight: 700;
     color: white;
+    min-width: 40px;
 }
 
+.badge-critical { background-color: #9b2d30; }
 .badge-error { background-color: #e74c3c; }
 .badge-warning { background-color: #f39c12; }
+.badge-info { background-color: #3498db; }
 
 #trend-indicator {
     font-size: 2.5rem;
     line-height: 1;
+    margin-top: 10px;
 }
 
 /* Recommendations List */
@@ -185,6 +207,15 @@ main {
     margin-left: -1em;
 }
 
+/* Config Display */
+#config-details {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #ecf0f1;
+    padding: 15px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+}
 
 /* Error Message */
 #error-message {

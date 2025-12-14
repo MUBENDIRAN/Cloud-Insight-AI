@@ -1,0 +1,19 @@
+{
+  "analysis_config": {
+    "log_files_to_analyze": [
+      "production.log",
+      "api-gateway.log",
+      "database-errors.log"
+    ],
+    "cost_categories_to_watch": [
+      "EC2",
+      "S3",
+      "RDS",
+      "Lambda"
+    ],
+    "abnormal_thresholds": {
+      "cost_increase_percentage": 10,
+      "critical_log_count": 5
+    }
+  }
+}
