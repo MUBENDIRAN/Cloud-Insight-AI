@@ -2,7 +2,7 @@
   "timestamp": "2025-12-14T12:00:00Z",
   "cost_summary": "Total cloud spend increased by 8% this week, driven primarily by a 15% rise in EC2 compute hours. S3 storage costs remain flat.",
   "log_summary": "Detected multiple critical database timeouts and S3 access errors. Log volume is 20% higher than the daily average.",
-  "sentiment": "Negative",
+  "log_health_status": "Degraded",
   "recommendations": [
     "Investigate the spike in EC2 usage in the 'us-east-1' region.",
     "Review IAM policies for the S3 bucket 'production-logs' to resolve access errors.",

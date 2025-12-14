@@ -11,9 +11,9 @@ const elements = {
     statusIndicator: document.getElementById('status-indicator'),
     costSummary: document.getElementById('cost-summary'),
     logSummary: document.getElementById('log-summary'),
-    sentiment: document.getElementById('sentiment'),
-    sentimentEmoji: document.getElementById('sentiment-emoji'),
-    sentimentMeterBar: document.getElementById('sentiment-meter-bar'),
+    healthStatus: document.getElementById('health-status'),
+    healthEmoji: document.getElementById('health-emoji'),
+    healthMeterBar: document.getElementById('health-meter-bar'),
     criticalCount: document.getElementById('critical-count'),
     errorCount: document.getElementById('error-count'),
     warningCount: document.getElementById('warning-count'),
@@ -57,14 +57,14 @@ async function fetchConfigData() {
 
 // --- UI UPDATES ---
 function updateDashboard(data) {
-    const errorCount = data.log_levels?.critical || 0;
+    const criticalCount = data.log_levels?.critical || 0;
     updateTimestamp(data.timestamp);
-    updateStatus(data.sentiment, errorCount);
+    updateOverallStatus(data.log_health_status, criticalCount);
     
     elements.costSummary.textContent = data.cost_summary || 'Not available';
     elements.logSummary.textContent = data.log_summary || 'Not available';
     
-    updateSentiment(data.sentiment);
+    updateLogHealth(data.log_health_status);
     updateLogLevels(data.log_levels);
     updateTrend(data.trend);
     updateRecommendations(data.recommendations);
@@ -79,13 +79,13 @@ function updateTimestamp(timestamp) {
     elements.lastUpdated.textContent = `Last updated: ${date.toLocaleString()}`;
 }
 
-function updateStatus(sentiment, criticalCount) {
+function updateOverallStatus(status, criticalCount) {
     let statusText = 'Healthy';
-    let statusColorClass = 'sentiment-positive';
+    let statusColorClass = 'status-healthy';
 
-    if (sentiment === 'Negative' || criticalCount > 0) {
+    if (status === 'Degraded' || criticalCount > 0) {
         statusText = 'Degraded';
-        statusColorClass = 'sentiment-negative';
+        statusColorClass = 'status-degraded';
     }
     if (criticalCount > 5) { // Example threshold for critical
         statusText = 'Critical';
@@ -95,33 +95,33 @@ function updateStatus(sentiment, criticalCount) {
     elements.statusIndicator.className = statusColorClass;
 }
 
-function updateSentiment(sentiment) {
-    const sentimentText = sentiment || 'Neutral';
+function updateLogHealth(status) {
+    const statusText = status || 'Stable';
     let emoji = '😐';
-    let colorClass = 'sentiment-neutral';
+    let colorClass = 'status-stable';
     let meterWidth = '50%';
-    let meterColor = '#3498db'; // Blue for Neutral
+    let meterColor = '#3498db'; // Blue for Stable
 
-    switch (sentimentText.toLowerCase()) {
-        case 'positive':
+    switch (statusText.toLowerCase()) {
+        case 'healthy':
             emoji = '😊';
-            colorClass = 'sentiment-positive';
+            colorClass = 'status-healthy';
             meterWidth = '100%';
             meterColor = '#2ecc71'; // Green
             break;
-        case 'negative':
+        case 'degraded':
             emoji = '😡';
-            colorClass = 'sentiment-negative';
+            colorClass = 'status-degraded';
             meterWidth = '10%';
             meterColor = '#e74c3c'; // Red
             break;
     }
 
-    elements.sentiment.textContent = sentimentText;
-    elements.sentiment.className = colorClass;
-    elements.sentimentEmoji.textContent = emoji;
-    elements.sentimentMeterBar.style.width = meterWidth;
-    elements.sentimentMeterBar.style.backgroundColor = meterColor;
+    elements.healthStatus.textContent = statusText;
+    elements.healthStatus.className = colorClass;
+    elements.healthEmoji.textContent = emoji;
+    elements.healthMeterBar.style.width = meterWidth;
+    elements.healthMeterBar.style.backgroundColor = meterColor;
 }
 
 function updateLogLevels(levels) {
