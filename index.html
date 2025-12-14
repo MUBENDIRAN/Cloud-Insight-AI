@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cloud Insight AI Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="description" content="Cloud Insight AI - Real-time cloud infrastructure monitoring and analytics dashboard">
 </head>
 <body>
 
@@ -13,75 +16,77 @@
         <div class="container">
             <h1>Cloud Insight AI</h1>
             <div class="header-controls">
-                <span id="last-updated"></span>
-                <button id="refresh-btn">Refresh Data</button>
+                <span id="last-updated" aria-live="polite"></span>
+                <button id="refresh-btn" aria-label="Refresh dashboard data">
+                    <span>Refresh Data</span>
+                </button>
             </div>
         </div>
     </header>
 
     <main class="container">
-        <div id="status-banner" class="card">
-            <h2>Overall Status: <span id="status-indicator"></span></h2>
+        <div id="status-banner" class="card" role="status" aria-live="polite">
+            <h2>Overall Status: <span id="status-indicator" aria-label="System status"></span></h2>
         </div>
 
         <div class="dashboard-grid">
             <section class="card">
-                <h2>Cost Insights</h2>
-                <p id="cost-summary">Fetching data...</p>
+                <h2>💰 Cost Insights</h2>
+                <p id="cost-summary" class="loading">Fetching data...</p>
             </section>
 
             <section class="card">
-                <h2>Log Insights</h2>
-                <p id="log-summary">Fetching data...</p>
+                <h2>📊 Log Insights</h2>
+                <p id="log-summary" class="loading">Fetching data...</p>
             </section>
 
             <section class="card">
-                <h2>Log Health Analysis</h2>
-                <div class="health-meter">
+                <h2>🏥 Log Health Analysis</h2>
+                <div class="health-meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                     <div id="health-meter-bar"></div>
                 </div>
                 <div class="health-display">
-                    <span id="health-emoji"></span>
-                    <p id="health-status">Fetching data...</p>
+                    <span id="health-emoji" aria-hidden="true"></span>
+                    <p id="health-status" class="loading">Fetching data...</p>
                 </div>
             </section>
 
             <section class="card">
-                <h2>Log Levels & Trend</h2>
+                <h2>📈 Log Levels & Trend</h2>
                 <div class="counts-grid">
                     <div class="count-item">
                         <h3>Critical</h3>
-                        <span id="critical-count" class="badge badge-critical">0</span>
+                        <span id="critical-count" class="badge badge-critical" aria-label="Critical log count">0</span>
                     </div>
                     <div class="count-item">
                         <h3>Error</h3>
-                        <span id="error-count" class="badge badge-error">0</span>
+                        <span id="error-count" class="badge badge-error" aria-label="Error log count">0</span>
                     </div>
                     <div class="count-item">
                         <h3>Warning</h3>
-                        <span id="warning-count" class="badge badge-warning">0</span>
+                        <span id="warning-count" class="badge badge-warning" aria-label="Warning log count">0</span>
                     </div>
-                     <div class="count-item">
+                    <div class="count-item">
                         <h3>Info</h3>
-                        <span id="info-count" class="badge badge-info">0</span>
+                        <span id="info-count" class="badge badge-info" aria-label="Info log count">0</span>
                     </div>
                     <div class="count-item">
                         <h3>Trend</h3>
-                        <span id="trend-indicator">→</span>
+                        <span id="trend-indicator" aria-label="Log trend">→</span>
                     </div>
                 </div>
             </section>
 
             <section class="card full-width">
-                <h2>Recommendations</h2>
-                <ul id="recommendations">
-                    <li>Fetching data...</li>
+                <h2>💡 Recommendations</h2>
+                <ul id="recommendations" role="list">
+                    <li class="loading">Fetching data...</li>
                 </ul>
             </section>
             
             <section class="card full-width">
-                <h2>Current Configuration</h2>
-                <div id="config-details">
+                <h2>⚙️ Current Configuration</h2>
+                <div id="config-details" class="loading">
                     <p>Fetching configuration...</p>
                 </div>
             </section>

@@ -27,6 +27,7 @@ const elements = {
 // --- DATA FETCHING ---
 async function fetchDashboardData() {
     try {
+        setLoadingState(true);
         const response = await fetch(S3_REPORT_URL);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -34,9 +35,13 @@ async function fetchDashboardData() {
         const data = await response.json();
         updateDashboard(data);
         hideError();
+        removeLoadingStates();
     } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
         showError('Failed to fetch or parse report data. Please check the console for details.');
+        removeLoadingStates();
+    } finally {
+        setLoadingState(false);
     }
 }
 
@@ -100,20 +105,23 @@ function updateLogHealth(status) {
     let emoji = '😐';
     let colorClass = 'status-stable';
     let meterWidth = '50%';
-    let meterColor = '#3498db'; // Blue for Stable
+    let meterColor = 'linear-gradient(90deg, #6366f1 0%, #818cf8 100%)'; // Blue for Stable
+    let meterValue = 50;
 
     switch (statusText.toLowerCase()) {
         case 'healthy':
             emoji = '😊';
             colorClass = 'status-healthy';
             meterWidth = '100%';
-            meterColor = '#2ecc71'; // Green
+            meterColor = 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'; // Green
+            meterValue = 100;
             break;
         case 'degraded':
             emoji = '😡';
             colorClass = 'status-degraded';
             meterWidth = '10%';
-            meterColor = '#e74c3c'; // Red
+            meterColor = 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)'; // Red
+            meterValue = 10;
             break;
     }
 
@@ -121,7 +129,14 @@ function updateLogHealth(status) {
     elements.healthStatus.className = colorClass;
     elements.healthEmoji.textContent = emoji;
     elements.healthMeterBar.style.width = meterWidth;
-    elements.healthMeterBar.style.backgroundColor = meterColor;
+    elements.healthMeterBar.style.background = meterColor;
+    
+    // Update ARIA attributes
+    const healthMeter = document.querySelector('.health-meter');
+    if (healthMeter) {
+        healthMeter.setAttribute('aria-valuenow', meterValue);
+        healthMeter.setAttribute('aria-label', `Health status: ${statusText} (${meterValue}%)`);
+    }
 }
 
 function updateLogLevels(levels) {
@@ -181,6 +196,24 @@ function hideError() {
     elements.errorMessage.classList.add('error-hidden');
 }
 
+// --- LOADING STATES ---
+function setLoadingState(isLoading) {
+    if (isLoading) {
+        elements.refreshBtn.classList.add('loading');
+        elements.refreshBtn.disabled = true;
+    } else {
+        elements.refreshBtn.classList.remove('loading');
+        elements.refreshBtn.disabled = false;
+    }
+}
+
+function removeLoadingStates() {
+    const loadingElements = document.querySelectorAll('.loading');
+    loadingElements.forEach(el => {
+        el.classList.remove('loading');
+    });
+}
+
 // --- INITIALIZATION ---
 function initialize() {
     // Event listener for the refresh button
@@ -191,7 +224,11 @@ function initialize() {
     fetchConfigData();
 
     // Set up auto-refresh
-    setInterval(fetchDashboardData, REFRESH_INTERVAL_MS);
+    setInterval(() => {
+        if (!elements.refreshBtn.disabled) {
+            fetchDashboardData();
+        }
+    }, REFRESH_INTERVAL_MS);
 }
 
 // Start the application
