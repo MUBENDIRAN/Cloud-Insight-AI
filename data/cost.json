@@ -1,0 +1,177 @@
+[
+  {
+    "service": "EC2",
+    "date": "2025-01-01",
+    "cost": 45.32
+  },
+  {
+    "service": "S3",
+    "date": "2025-01-01",
+    "cost": 8.15
+  },
+  {
+    "service": "Lambda",
+    "date": "2025-01-01",
+    "cost": 2.47
+  },
+  {
+    "service": "RDS",
+    "date": "2025-01-01",
+    "cost": 67.89
+  },
+  {
+    "service": "CloudWatch",
+    "date": "2025-01-01",
+    "cost": 3.21
+  },
+  {
+    "service": "EC2",
+    "date": "2025-01-02",
+    "cost": 48.76
+  },
+  {
+    "service": "S3",
+    "date": "2025-01-02",
+    "cost": 8.34
+  },
+  {
+    "service": "Lambda",
+    "date": "2025-01-02",
+    "cost": 2.89
+  },
+  {
+    "service": "RDS",
+    "date": "2025-01-02",
+    "cost": 67.89
+  },
+  {
+    "service": "CloudWatch",
+    "date": "2025-01-02",
+    "cost": 3.45
+  },
+  {
+    "service": "EC2",
+    "date": "2025-01-03",
+    "cost": 52.11
+  },
+  {
+    "service": "S3",
+    "date": "2025-01-03",
+    "cost": 9.02
+  },
+  {
+    "service": "Lambda",
+    "date": "2025-01-03",
+    "cost": 3.12
+  },
+  {
+    "service": "RDS",
+    "date": "2025-01-03",
+    "cost": 67.89
+  },
+  {
+    "service": "CloudWatch",
+    "date": "2025-01-03",
+    "cost": 3.67
+  },
+  {
+    "service": "EC2",
+    "date": "2025-01-04",
+    "cost": 55.44
+  },
+  {
+    "service": "S3",
+    "date": "2025-01-04",
+    "cost": 10.23
+  },
+  {
+    "service": "Lambda",
+    "date": "2025-01-04",
+    "cost": 3.78
+  },
+  {
+    "service": "RDS",
+    "date": "2025-01-04",
+    "cost": 67.89
+  },
+  {
+    "service": "CloudWatch",
+    "date": "2025-01-04",
+    "cost": 4.12
+  },
+  {
+    "service": "EC2",
+    "date": "2025-01-05",
+    "cost": 58.92
+  },
+  {
+    "service": "S3",
+    "date": "2025-01-05",
+    "cost": 11.45
+  },
+  {
+    "service": "Lambda",
+    "date": "2025-01-05",
+    "cost": 4.23
+  },
+  {
+    "service": "RDS",
+    "date": "2025-01-05",
+    "cost": 67.89
+  },
+  {
+    "service": "CloudWatch",
+    "date": "2025-01-05",
+    "cost": 4.56
+  },
+  {
+    "service": "DynamoDB",
+    "date": "2025-01-01",
+    "cost": 5.67
+  },
+  {
+    "service": "DynamoDB",
+    "date": "2025-01-02",
+    "cost": 5.89
+  },
+  {
+    "service": "DynamoDB",
+    "date": "2025-01-03",
+    "cost": 6.12
+  },
+  {
+    "service": "DynamoDB",
+    "date": "2025-01-04",
+    "cost": 6.45
+  },
+  {
+    "service": "DynamoDB",
+    "date": "2025-01-05",
+    "cost": 6.78
+  },
+  {
+    "service": "CloudFront",
+    "date": "2025-01-01",
+    "cost": 12.34
+  },
+  {
+    "service": "CloudFront",
+    "date": "2025-01-02",
+    "cost": 13.21
+  },
+  {
+    "service": "CloudFront",
+    "date": "2025-01-03",
+    "cost": 14.56
+  },
+  {
+    "service": "CloudFront",
+    "date": "2025-01-04",
+    "cost": 15.89
+  },
+  {
+    "service": "CloudFront",
+    "date": "2025-01-05",
+    "cost": 17.23
+  }
+]

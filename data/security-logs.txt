@@ -1,0 +1,37 @@
+2025-01-01 08:00:01 [INFO] Security monitoring service started
+2025-01-01 08:15:23 [INFO] User authentication successful: user_id=12345
+2025-01-01 08:16:45 [WARNING] Multiple failed login attempts detected from IP 192.168.1.100
+2025-01-01 08:17:12 [ERROR] Authentication failed: invalid credentials for user admin
+2025-01-01 08:17:13 [ERROR] Authentication failed: invalid credentials for user root
+2025-01-01 08:17:14 [ERROR] Authentication failed: invalid credentials for user administrator
+2025-01-01 08:17:30 [WARNING] IP 192.168.1.100 blocked after 5 failed login attempts
+2025-01-01 08:22:45 [INFO] User session created: session_id=abc123, user_id=12345
+2025-01-01 08:30:12 [WARNING] Unusual API access pattern detected from user_id=67890
+2025-01-01 08:35:22 [ERROR] SQL injection attempt blocked: query contained malicious pattern
+2025-01-01 08:35:23 [WARNING] WAF rule triggered: potential attack from IP 203.0.113.45
+2025-01-01 08:40:15 [INFO] SSL certificate validation successful
+2025-01-01 08:45:33 [ERROR] Access denied: user_id=54321 attempted to access restricted resource /admin/config
+2025-01-01 08:50:41 [WARNING] Elevated privileges requested by user_id=12345
+2025-01-01 08:51:02 [INFO] Privilege elevation approved by admin
+2025-01-01 09:00:12 [ERROR] Unauthorized API key usage detected: key_id=test_key_001
+2025-01-01 09:05:23 [WARNING] Rate limiting applied to IP 198.51.100.42: exceeded 100 requests/minute
+2025-01-01 09:10:34 [INFO] Security scan completed: 0 vulnerabilities found
+2025-01-01 09:15:45 [ERROR] Cross-site scripting (XSS) attempt blocked in user input
+2025-01-01 09:20:56 [WARNING] Suspicious file upload attempt: potentially malicious file type detected
+2025-01-01 09:25:11 [INFO] Two-factor authentication enabled for user_id=12345
+2025-01-01 09:30:22 [ERROR] Token validation failed: expired JWT token
+2025-01-01 09:35:33 [WARNING] Account lockout triggered for user_id=99999 after repeated failures
+2025-01-01 09:40:44 [INFO] Password changed successfully for user_id=12345
+2025-01-01 09:45:55 [ERROR] CORS policy violation: request from unauthorized origin https://malicious-site.com
+2025-01-01 09:50:06 [WARNING] Session timeout: user_id=67890 inactive for 30 minutes
+2025-01-01 09:55:17 [INFO] User logout successful: session_id=abc123
+2025-01-01 10:00:28 [ERROR] Brute force attack detected: 50+ login attempts from IP 203.0.113.99
+2025-01-01 10:05:39 [WARNING] Geolocation anomaly: user_id=12345 logged in from unusual location
+2025-01-01 10:10:50 [INFO] Security policy updated: password complexity requirements increased
+2025-01-01 10:15:01 [ERROR] API rate limit exceeded: blocking requests from client_id=mobile_app_v1
+2025-01-01 10:20:12 [WARNING] Deprecated encryption protocol detected: client using TLS 1.0
+2025-01-01 10:25:23 [INFO] Security audit log archived successfully
+2025-01-01 10:30:34 [ERROR] Directory traversal attempt blocked: path contained ../.. pattern
+2025-01-01 10:35:45 [WARNING] Weak password detected during password change attempt
+2025-01-01 10:40:56 [INFO] MFA verification successful for user_id=12345
+2025-01-01 10:45:07 [ERROR] Session hijacking attempt detected: invalid session fingerprint

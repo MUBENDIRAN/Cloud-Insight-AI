@@ -1,0 +1,47 @@
+2025-01-01 08:15:23 [INFO] Application started successfully
+2025-01-01 08:15:24 [INFO] Connecting to database at db-prod-01.us-east-1.rds.amazonaws.com
+2025-01-01 08:15:25 [INFO] Database connection established
+2025-01-01 08:16:12 [WARNING] High memory usage detected: 78% on instance i-0a1b2c3d4e5f6
+2025-01-01 08:17:45 [ERROR] Failed to connect to S3 bucket: analytics-data-prod
+2025-01-01 08:17:46 [ERROR] S3 AccessDenied for bucket analytics-data-prod - check IAM permissions
+2025-01-01 08:18:22 [INFO] Retrying S3 connection with exponential backoff
+2025-01-01 08:18:23 [INFO] S3 connection successful
+2025-01-01 08:22:11 [WARNING] API response time exceeded threshold: 2.3s for endpoint /api/users
+2025-01-01 08:25:34 [ERROR] Database query timeout after 30s: SELECT * FROM transactions WHERE date > '2024-01-01'
+2025-01-01 08:25:35 [WARNING] Falling back to cached data
+2025-01-01 08:30:45 [INFO] Processing batch job: daily-aggregation-001
+2025-01-01 08:35:12 [ERROR] Lambda function execution failed: memory limit exceeded (512MB)
+2025-01-01 08:35:13 [ERROR] Stack trace: MemoryError at line 147 in data_processor.py
+2025-01-01 08:40:23 [WARNING] CloudWatch metrics delivery delayed by 45 seconds
+2025-01-01 08:45:56 [INFO] Batch job completed successfully: 15,432 records processed
+2025-01-01 08:50:11 [ERROR] Unable to resolve DNS for service discovery: backend-api.internal
+2025-01-01 08:50:12 [WARNING] Service mesh routing degraded
+2025-01-01 08:55:34 [INFO] Health check passed for all instances
+2025-01-01 09:00:15 [ERROR] DynamoDB ProvisionedThroughputExceededException on table UserSessions
+2025-01-01 09:00:16 [WARNING] Implementing exponential backoff for DynamoDB requests
+2025-01-01 09:05:22 [INFO] Auto-scaling triggered: adding 2 new EC2 instances to ASG
+2025-01-01 09:10:45 [ERROR] ECS task failed to start: insufficient memory in cluster
+2025-01-01 09:10:46 [ERROR] Task definition requires 2GB but only 1.5GB available
+2025-01-01 09:15:33 [WARNING] SSL certificate expires in 15 days: *.cloudinsight-ai.com
+2025-01-01 09:20:11 [INFO] Backup job initiated for RDS instance db-prod-01
+2025-01-01 09:25:47 [ERROR] SQS message processing failed: JSON parsing error
+2025-01-01 09:25:48 [ERROR] Invalid message format in queue: data-ingestion-queue
+2025-01-01 09:30:12 [WARNING] Network latency spike detected: 450ms to us-west-2
+2025-01-01 09:35:55 [INFO] CloudFront cache hit ratio: 87.3%
+2025-01-01 09:40:23 [ERROR] Elasticsearch cluster health status: RED
+2025-01-01 09:40:24 [ERROR] 2 of 5 nodes are unreachable
+2025-01-01 09:45:18 [WARNING] Redis connection pool exhausted: 100/100 connections in use
+2025-01-01 09:50:34 [INFO] Scheduled maintenance window started
+2025-01-01 09:55:41 [ERROR] API Gateway throttling: rate limit exceeded (1000 req/sec)
+2025-01-01 09:55:42 [WARNING] 429 responses being returned to clients
+2025-01-01 10:00:15 [INFO] Load balancer distributed 125,432 requests across 8 targets
+2025-01-01 10:05:29 [ERROR] Kinesis stream falling behind: 2.5 hours of lag
+2025-01-01 10:05:30 [ERROR] Consumer unable to keep up with producer throughput
+2025-01-01 10:10:44 [WARNING] Disk usage on instance i-0f9e8d7c6b5a4: 92%
+2025-01-01 10:15:22 [INFO] Cleanup job removed 5.2GB of temporary files
+2025-01-01 10:20:38 [ERROR] SNS notification delivery failed for topic: critical-alerts
+2025-01-01 10:20:39 [ERROR] HTTP endpoint returned 503 Service Unavailable
+2025-01-01 10:25:51 [WARNING] WAF rule triggered: SQL injection attempt blocked
+2025-01-01 10:30:17 [INFO] Container health check passed: application is responsive
+2025-01-01 10:35:42 [ERROR] Secret rotation failed for RDS credentials in Secrets Manager
+2025-01-01 10:35:43 [WARNING] Using current credentials until rotation succeeds
