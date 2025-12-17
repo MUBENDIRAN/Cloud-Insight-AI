@@ -1,0 +1,85 @@
+# Cloud Insight AI Configuration
+general:
+  project_name: "Cloud Insight AI"
+  report_filename: "final_report.txt"
+  enable_comprehend: true
+
+cost_analysis:
+  enabled: true
+  data_sources:
+    - "data/cost.json"
+  thresholds:
+    cost_increase_alert_percent: 15.0
+    high_cost_service_percent: 30.0
+    stable_range_percent: 5.0
+  monitor_services: []
+  exclude_services: []
+
+log_analysis:
+  enabled: true
+  data_sources:
+    - path: "data/logs.txt"
+      type: "application"
+      description: "Main application logs"
+    - path: "data/security-logs.txt"
+      type: "security"
+      description: "Security and authentication logs"
+    - path: "data/performance-logs.txt"
+      type: "performance"
+      description: "Performance and metrics logs"
+  thresholds:
+    max_error_rate_percent: 10.0
+    max_error_count: 15
+    max_warning_count: 25
+  error_patterns:
+    - name: "Connection Issues"
+      keywords: ["connection", "timeout", "unreachable"]
+      severity: "high"
+    - name: "Permission Errors"
+      keywords: ["AccessDenied", "permission", "unauthorized"]
+      severity: "high"
+    - name: "Resource Limits"
+      keywords: ["memory", "disk", "throughput", "limit exceeded"]
+      severity: "critical"
+    - name: "Database Issues"
+      keywords: ["database", "query timeout", "DynamoDB"]
+      severity: "high"
+    - name: "Security Alerts"
+      keywords: ["injection", "breach", "intrusion", "malicious"]
+      severity: "critical"
+
+comprehend:
+  enabled: true
+  region: "us-east-1"
+  max_text_bytes: 5000
+  features:
+    key_phrases: true
+    sentiment: true
+    entities: true
+
+notifications:
+  enabled: false
+  email:
+    enabled: false
+    sender: "cloud-insight-ai@yourdomain.com"
+    recipients:
+      - "your-email@example.com"
+  slack:
+    enabled: false
+    webhook_url: ""
+
+storage:
+  s3_bucket: ""
+  use_date_prefix: false
+  archive_reports: false
+
+reporting:
+  format: "text"
+  sections:
+    executive_summary: true
+    cost_analysis: true
+    log_analysis: true
+    ai_insights: true
+    recommendations: true
+    alert_summary: true
+  detail_level: "detailed"

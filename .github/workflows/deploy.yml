@@ -1,4 +1,4 @@
-name: Deploy Cloud Insight AI to ECS
+name: Deploy Cloud Insight AI
 
 on:
   push:
@@ -6,16 +6,8 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: cloud-insight-ai
-  ECS_CLUSTER: cloud-insight-ai-cluster
-  ECS_TASK_DEFINITION: cloud-insight-ai
-  CONTAINER_NAME: cloud-insight-ai-container
-
 jobs:
   deploy:
-    name: Build and Deploy to ECS
     runs-on: ubuntu-latest
     
     steps:
@@ -27,131 +19,23 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
       
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
+      - name: Build and push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          ECR_REPOSITORY: cloud-insight-ai
+          IMAGE_TAG: latest
         run: |
-          # Build Docker image
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/Dockerfile .
-          
-          # Also tag as latest
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          # Push both tags
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "Image pushed: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
       
-      - name: Get current task definition
-        id: get-task-def
+      - name: Deployment complete
         run: |
-          aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-            --query 'taskDefinition' \
-            --output json > task-definition.json
-          
-          # Remove unnecessary fields
-          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' \
-            task-definition.json > task-definition-clean.json
-      
-      - name: Update task definition with new image
-        id: update-task-def
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Update image in task definition
-          jq --arg IMAGE "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
-            '.containerDefinitions[0].image = $IMAGE' \
-            task-definition-clean.json > task-definition-new.json
-          
-          cat task-definition-new.json
-      
-      - name: Register new task definition
-        id: register-task-def
-        run: |
-          NEW_TASK_DEF=$(aws ecs register-task-definition \
-            --cli-input-json file://task-definition-new.json \
-            --query 'taskDefinition.taskDefinitionArn' \
-            --output text)
-          
-          echo "task-definition-arn=$NEW_TASK_DEF" >> $GITHUB_OUTPUT
-          echo "Registered new task definition: $NEW_TASK_DEF"
-      
-      - name: Run ECS task
-        env:
-          TASK_DEF_ARN: ${{ steps.register-task-def.outputs.task-definition-arn }}
-        run: |
-          # Get default VPC and subnets
-          VPC_ID=$(aws ec2 describe-vpcs \
-            --filters "Name=isDefault,Values=true" \
-            --query 'Vpcs[0].VpcId' \
-            --output text)
-          
-          SUBNET_IDS=$(aws ec2 describe-subnets \
-            --filters "Name=vpc-id,Values=$VPC_ID" \
-            --query 'Subnets[*].SubnetId' \
-            --output text | tr '\t' ',')
-          
-          SECURITY_GROUP=$(aws ec2 describe-security-groups \
-            --filters "Name=vpc-id,Values=$VPC_ID" "Name=group-name,Values=default" \
-            --query 'SecurityGroups[0].GroupId' \
-            --output text)
-          
-          echo "Running task in VPC: $VPC_ID"
-          echo "Using subnets: $SUBNET_IDS"
-          echo "Using security group: $SECURITY_GROUP"
-          
-          # Run the task
-          TASK_ARN=$(aws ecs run-task \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --task-definition $TASK_DEF_ARN \
-            --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_IDS],securityGroups=[$SECURITY_GROUP],assignPublicIp=ENABLED}" \
-            --query 'tasks[0].taskArn' \
-            --output text)
-          
-          echo "Started task: $TASK_ARN"
-          
-          # Wait for task to complete (optional - remove if you want fire-and-forget)
-          echo "Waiting for task to complete..."
-          aws ecs wait tasks-stopped \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --tasks $TASK_ARN
-          
-          # Check task exit code
-          EXIT_CODE=$(aws ecs describe-tasks \
-            --cluster ${{ env.ECS_CLUSTER }} \
-            --tasks $TASK_ARN \
-            --query 'tasks[0].containers[0].exitCode' \
-            --output text)
-          
-          if [ "$EXIT_CODE" != "0" ]; then
-            echo "Task failed with exit code $EXIT_CODE"
-            exit 1
-          fi
-          
-          echo "Task completed successfully!"
-      
-      - name: Deployment summary
-        run: |
-          echo "### Deployment Summary :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image:** ${{ steps.build-image.outputs.image }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Task Definition:** ${{ steps.register-task-def.outputs.task-definition-arn }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Cluster:** ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **Deployment successful!**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Check CloudWatch Logs: \`/ecs/cloud-insight-ai\`" >> $GITHUB_STEP_SUMMARY
-          echo "Check S3 Bucket for report: \`s3://${{ secrets.S3_BUCKET }}/final_report.txt\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Docker image built and pushed successfully!"
+          echo "Next: Run ECS task manually from AWS Console"
