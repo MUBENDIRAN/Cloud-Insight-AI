@@ -1,7 +1,7 @@
 // --- CONFIGURATION ---
 // IMPORTANT: Replace this with the actual public URL of your final_report.json file in S3.
-const S3_REPORT_URL = 'final_report.json'; // Using local file for demo
-const CONFIG_URL = 'config.json'; // URL for the configuration file
+const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json'; // Using local file for demo
+const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json'; // URL for the configuration file
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 
 // --- DOM ELEMENT REFERENCES ---
