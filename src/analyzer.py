@@ -361,7 +361,7 @@ JSON Data: final_report.json, config.json
             raise
     
     def upload_json_to_s3(self, filename):
-        """Upload JSON file to S3 with public-read access for dashboard"""
+        """Upload JSON file to S3 WITHOUT ACL (bucket doesn't support it)"""
         try:
             with open(filename, 'r') as f:
                 content = f.read()
@@ -371,10 +371,10 @@ JSON Data: final_report.json, config.json
                 Key=filename,
                 Body=content,
                 ContentType='application/json',
-                ACL='public-read',  # Make publicly readable for dashboard
-                CacheControl='no-cache, no-store, must-revalidate'  # Prevent caching
+                # REMOVED: ACL='public-read' - bucket doesn't support ACLs
+                CacheControl='no-cache, no-store, must-revalidate'
             )
-            print(f"[INFO] Uploaded {filename} to S3 (public-read)")
+            print(f"[INFO] Uploaded {filename} to S3")
         except Exception as e:
             print(f"[ERROR] S3 upload failed for {filename}: {str(e)}")
             raise

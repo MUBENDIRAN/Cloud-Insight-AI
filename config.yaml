@@ -2,7 +2,7 @@
 general:
   project_name: "Cloud Insight AI"
   report_filename: "final_report.txt"
-  enable_comprehend: true
+  enable_comprehend: false
 
 cost_analysis:
   enabled: true
@@ -49,7 +49,7 @@ log_analysis:
       severity: "critical"
 
 comprehend:
-  enabled: true
+  enabled: false
   region: "us-east-1"
   max_text_bytes: 5000
   features:
