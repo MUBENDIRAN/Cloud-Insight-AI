@@ -1,8 +1,10 @@
-# Cloud Insight AI Configuration
+# Cloud Insight AI - Complete Configuration
+# All features enabled: Comprehend, Scheduling, Email, Multiple Logs
+
 general:
   project_name: "Cloud Insight AI"
   report_filename: "final_report.txt"
-  enable_comprehend: false
+  enable_comprehend: true  # ✅ ENABLED - using us-east-1
 
 cost_analysis:
   enabled: true
@@ -18,58 +20,90 @@ cost_analysis:
 log_analysis:
   enabled: true
   data_sources:
+    # ✅ ALL 3 LOG SOURCES ENABLED
     - path: "data/logs.txt"
       type: "application"
       description: "Main application logs"
+    
     - path: "data/security-logs.txt"
       type: "security"
       description: "Security and authentication logs"
+    
     - path: "data/performance-logs.txt"
       type: "performance"
       description: "Performance and metrics logs"
+  
   thresholds:
     max_error_rate_percent: 10.0
     max_error_count: 15
     max_warning_count: 25
+  
+  # ✅ ERROR PATTERNS FOR DETECTION
   error_patterns:
     - name: "Connection Issues"
-      keywords: ["connection", "timeout", "unreachable"]
+      keywords: ["connection", "timeout", "unreachable", "refused"]
       severity: "high"
+    
     - name: "Permission Errors"
-      keywords: ["AccessDenied", "permission", "unauthorized"]
+      keywords: ["AccessDenied", "permission", "unauthorized", "forbidden"]
       severity: "high"
+    
     - name: "Resource Limits"
-      keywords: ["memory", "disk", "throughput", "limit exceeded"]
+      keywords: ["memory", "disk", "throughput", "limit exceeded", "quota"]
       severity: "critical"
+    
+    - name: "Service Failures"
+      keywords: ["failed to start", "unhealthy", "unavailable", "crashed"]
+      severity: "critical"
+    
     - name: "Database Issues"
-      keywords: ["database", "query timeout", "DynamoDB"]
+      keywords: ["database", "query timeout", "DynamoDB", "deadlock"]
       severity: "high"
+    
+    - name: "API Problems"
+      keywords: ["API", "throttling", "rate limit", "429", "503"]
+      severity: "medium"
+    
+    - name: "Network Issues"
+      keywords: ["DNS", "latency", "network", "routing"]
+      severity: "medium"
+    
     - name: "Security Alerts"
-      keywords: ["injection", "breach", "intrusion", "malicious"]
+      keywords: ["injection", "breach", "intrusion", "malicious", "attack"]
       severity: "critical"
 
+# ✅ COMPREHEND - Using us-east-1 (FREE TIER)
 comprehend:
-  enabled: false
-  region: "us-east-1"
+  enabled: true
+  region: "us-east-1"  # Using US East for free tier!
   max_text_bytes: 5000
   features:
     key_phrases: true
     sentiment: true
     entities: true
 
+# ✅ EMAIL NOTIFICATIONS ENABLED
 notifications:
-  enabled: false
+  enabled: true
+  
   email:
-    enabled: false
-    sender: "cloud-insight-ai@yourdomain.com"
+    enabled: true
+    sender: "mubemubendiran@gmail.com"  # ⚠️ REPLACE WITH YOUR VERIFIED EMAIL
     recipients:
-      - "your-email@example.com"
+      - "mubemubendiran@gmail.com"      # ⚠️ REPLACE WITH RECIPIENT EMAIL
+    subject_prefix: "[Cloud Insight AI]"
+    include_full_report: true
+  
   slack:
     enabled: false
     webhook_url: ""
+    channel: "#cloud-alerts"
+  
+  # Send email every time (false) or only on alerts (true)
+  notify_only_on_alerts: false
 
 storage:
-  s3_bucket: ""
+  s3_bucket: ""  # Will use S3_BUCKET env var
   use_date_prefix: false
   archive_reports: false
 
