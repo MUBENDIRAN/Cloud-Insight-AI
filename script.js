@@ -1,16 +1,20 @@
 // --- CONFIGURATION ---
-// IMPORTANT: Replace this with the actual public URL of your final_report.json file in S3.
-const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json'; // Using local file for demo
-const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json'; // URL for the configuration file
+const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
+const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json';
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
 
 // --- DOM ELEMENT REFERENCES ---
 const elements = {
+    loadingOverlay: document.getElementById('loading-overlay'),
     lastUpdated: document.getElementById('last-updated'),
     refreshBtn: document.getElementById('refresh-btn'),
-    statusIndicator: document.getElementById('status-indicator'),
+    downloadReportBtn: document.getElementById('download-report-btn'),
+    autoRefreshToggle: document.getElementById('auto-refresh'),
+    statusIndicators: document.getElementById('status-indicators'),
+    executiveSummaryMetrics: document.getElementById('executive-summary-metrics'),
     costSummary: document.getElementById('cost-summary'),
     logSummary: document.getElementById('log-summary'),
+    aiInsightsList: document.getElementById('ai-insights-list'),
     healthStatus: document.getElementById('health-status'),
     healthEmoji: document.getElementById('health-emoji'),
     healthMeterBar: document.getElementById('health-meter-bar'),
@@ -22,26 +26,30 @@ const elements = {
     recommendationsList: document.getElementById('recommendations'),
     configDetails: document.getElementById('config-details'),
     errorMessage: document.getElementById('error-message'),
+    costTrendChart: document.getElementById('costTrendChart'),
 };
+
+let autoRefreshInterval;
+let costChart;
 
 // --- DATA FETCHING ---
 async function fetchDashboardData() {
+    showLoadingOverlay();
     try {
         setLoadingState(true);
         const response = await fetch(S3_REPORT_URL);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
         updateDashboard(data);
         hideError();
-        removeLoadingStates();
     } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
-        showError('Failed to fetch or parse report data. Please check the console for details.');
-        removeLoadingStates();
+        showError(`Failed to fetch report data: ${error.message}. Please check the console for details.`);
     } finally {
         setLoadingState(false);
+        hideLoadingOverlay();
     }
 }
 
@@ -55,83 +63,130 @@ async function fetchConfigData() {
         updateConfigDisplay(config);
     } catch (error) {
         console.error('Failed to fetch config data:', error);
-        elements.configDetails.textContent = 'Failed to load configuration.';
+        elements.configDetails.innerHTML = '<p>Failed to load configuration.</p>';
     }
 }
-
 
 // --- UI UPDATES ---
 function updateDashboard(data) {
     const criticalCount = data.log_levels?.critical || 0;
+    const warningCount = data.log_levels?.warning || 0;
+    const errorCount = data.log_levels?.error || 0;
+
     updateTimestamp(data.timestamp);
-    updateOverallStatus(data.log_health_status, criticalCount);
+    updateStatusIndicators(data.cost_health, criticalCount, warningCount);
+    updateExecutiveSummary(data);
     
     elements.costSummary.textContent = data.cost_summary || 'Not available';
     elements.logSummary.textContent = data.log_summary || 'Not available';
     
+    updateAiInsights(data.ai_insights);
     updateLogHealth(data.log_health_status);
     updateLogLevels(data.log_levels);
     updateTrend(data.trend);
     updateRecommendations(data.recommendations);
+    updateCostChart(data.cost_trend);
+    
+    removeLoadingPlaceholders();
 }
 
 function updateTimestamp(timestamp) {
     if (!timestamp) {
-        elements.lastUpdated.textContent = 'Last updated: N/A';
+        elements.lastUpdated.innerHTML = 'Last updated: N/A';
         return;
     }
     const date = new Date(timestamp);
-    elements.lastUpdated.textContent = `Last updated: ${date.toLocaleString()}`;
+    const timeAgo = getTimeAgo(date);
+    elements.lastUpdated.innerHTML = `Last updated: <strong>${timeAgo}</strong> <span class="text-gray-400">(${date.toLocaleString()})</span>`;
 }
 
-function updateOverallStatus(status, criticalCount) {
-    let statusText = 'Healthy';
-    let statusColorClass = 'status-healthy';
-
-    if (status === 'Degraded' || criticalCount > 0) {
-        statusText = 'Degraded';
-        statusColorClass = 'status-degraded';
-    }
-    if (criticalCount > 5) { // Example threshold for critical
-        statusText = 'Critical';
-    }
+function updateStatusIndicators(costHealth, criticals, warnings) {
+    let indicators = '';
     
-    elements.statusIndicator.textContent = statusText;
-    elements.statusIndicator.className = statusColorClass;
+    // Cost Status
+    let costStatus = 'green';
+    if (costHealth === 'warning') costStatus = 'yellow';
+    if (costHealth === 'critical') costStatus = 'red';
+    indicators += `<div class="status-item"><span class="status-dot ${costStatus}"></span><span>Costs: Monitored</span></div>`;
+
+    // Log Status
+    let logStatus = 'green';
+    if (warnings > 0) logStatus = 'yellow';
+    if (criticals > 0) logStatus = 'red';
+    const logLabel = criticals > 0 ? `${criticals} Critical` : (warnings > 0 ? `${warnings} Warnings` : 'Nominal');
+    indicators += `<div class="status-item"><span class="status-dot ${logStatus}"></span><span>Logs: ${logLabel}</span></div>`;
+
+    elements.statusIndicators.innerHTML = indicators;
+}
+
+function updateExecutiveSummary(data) {
+    const totalCost = data.cost_trend?.total_cost || 0;
+    const costChange = data.cost_trend?.change_percentage || 0;
+    const totalLogs = Object.values(data.log_levels || {}).reduce((a, b) => a + b, 0);
+    const errorCount = (data.log_levels?.critical || 0) + (data.log_levels?.error || 0);
+
+    const trendClass = costChange > 0 ? 'up' : 'down';
+    const trendSign = costChange > 0 ? '+' : '';
+
+    const metricsHTML = `
+        <div class="metric">
+            <span class="metric-value">$${totalCost.toFixed(2)}</span>
+            <span class="metric-label">Total Costs</span>
+            <span class="metric-trend ${trendClass}">${trendSign}${costChange.toFixed(1)}%</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">${totalLogs}</span>
+            <span class="metric-label">Total Log Entries</span>
+            <span class="metric-trend">${errorCount} errors</span>
+        </div>
+    `;
+    elements.executiveSummaryMetrics.innerHTML = metricsHTML;
+}
+
+function updateAiInsights(insights) {
+    elements.aiInsightsList.innerHTML = '';
+    if (insights && insights.length > 0) {
+        insights.forEach(insight => {
+            const div = document.createElement('div');
+            div.className = 'insight';
+            div.innerHTML = `<strong>${insight.title}:</strong> ${insight.finding}`;
+            elements.aiInsightsList.appendChild(div);
+        });
+    } else {
+        const div = document.createElement('div');
+        div.className = 'insight';
+        div.textContent = 'No AI-powered insights available at this time.';
+        elements.aiInsightsList.appendChild(div);
+    }
 }
 
 function updateLogHealth(status) {
     const statusText = status || 'Stable';
     let emoji = '😐';
-    let colorClass = 'status-stable';
     let meterWidth = '50%';
-    let meterColor = 'linear-gradient(90deg, #6366f1 0%, #818cf8 100%)'; // Blue for Stable
+    let meterColor = 'var(--primary-color)';
     let meterValue = 50;
 
     switch (statusText.toLowerCase()) {
         case 'healthy':
             emoji = '😊';
-            colorClass = 'status-healthy';
             meterWidth = '100%';
-            meterColor = 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'; // Green
+            meterColor = 'var(--success-color)';
             meterValue = 100;
             break;
         case 'degraded':
             emoji = '😡';
-            colorClass = 'status-degraded';
             meterWidth = '10%';
-            meterColor = 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)'; // Red
+            meterColor = 'var(--error-color)';
             meterValue = 10;
             break;
     }
 
     elements.healthStatus.textContent = statusText;
-    elements.healthStatus.className = colorClass;
     elements.healthEmoji.textContent = emoji;
     elements.healthMeterBar.style.width = meterWidth;
     elements.healthMeterBar.style.background = meterColor;
     
-    // Update ARIA attributes
     const healthMeter = document.querySelector('.health-meter');
     if (healthMeter) {
         healthMeter.setAttribute('aria-valuenow', meterValue);
@@ -148,16 +203,13 @@ function updateLogLevels(levels) {
 
 function updateTrend(trend) {
     let trendSymbol = '→'; // Neutral
-    if (trend === 'up') {
-        trendSymbol = '▲'; // Up
-    } else if (trend === 'down') {
-        trendSymbol = '▼'; // Down
-    }
+    if (trend === 'up') trendSymbol = '▲'; // Up
+    if (trend === 'down') trendSymbol = '▼'; // Down
     elements.trendIndicator.textContent = trendSymbol;
 }
 
 function updateRecommendations(recommendations) {
-    elements.recommendationsList.innerHTML = ''; // Clear existing items
+    elements.recommendationsList.innerHTML = '';
     if (recommendations && recommendations.length > 0) {
         recommendations.forEach(rec => {
             const li = document.createElement('li');
@@ -185,6 +237,65 @@ Thresholds: Cost Increase > ${configData.abnormal_thresholds.cost_increase_perce
     elements.configDetails.textContent = html;
 }
 
+function updateCostChart(costTrend) {
+    if (!costTrend || !costTrend.history) return;
+
+    const labels = costTrend.history.map(item => new Date(item.date).toLocaleDateString());
+    const data = costTrend.history.map(item => item.cost);
+
+    const chartData = {
+        labels: labels,
+        datasets: [{
+            label: 'Cost Over Time',
+            data: data,
+            borderColor: 'rgba(99, 102, 241, 1)',
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            fill: true,
+            tension: 0.4,
+        }]
+    };
+
+    if (costChart) {
+        costChart.data = chartData;
+        costChart.update();
+    } else {
+        const ctx = elements.costTrendChart.getContext('2d');
+        costChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+}
+
+// --- UTILITY FUNCTIONS ---
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return Math.floor(seconds) + " seconds ago";
+}
+
+function downloadReport() {
+    window.open(S3_REPORT_URL.replace('.json', '.txt'), '_blank');
+}
 
 // --- ERROR HANDLING ---
 function showError(message) {
@@ -197,38 +308,51 @@ function hideError() {
 }
 
 // --- LOADING STATES ---
-function setLoadingState(isLoading) {
-    if (isLoading) {
-        elements.refreshBtn.classList.add('loading');
-        elements.refreshBtn.disabled = true;
-    } else {
-        elements.refreshBtn.classList.remove('loading');
-        elements.refreshBtn.disabled = false;
-    }
+function showLoadingOverlay() {
+    elements.loadingOverlay.classList.remove('hidden');
 }
 
-function removeLoadingStates() {
-    const loadingElements = document.querySelectorAll('.loading');
-    loadingElements.forEach(el => {
-        el.classList.remove('loading');
-    });
+function hideLoadingOverlay() {
+    elements.loadingOverlay.classList.add('hidden');
+}
+
+function setLoadingState(isLoading) {
+    elements.refreshBtn.classList.toggle('loading', isLoading);
+    elements.refreshBtn.disabled = isLoading;
+}
+
+function removeLoadingPlaceholders() {
+    document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
 }
 
 // --- INITIALIZATION ---
 function initialize() {
-    // Event listener for the refresh button
     elements.refreshBtn.addEventListener('click', fetchDashboardData);
+    elements.downloadReportBtn.addEventListener('click', downloadReport);
+    elements.autoRefreshToggle.addEventListener('change', () => {
+        if (elements.autoRefreshToggle.checked) {
+            startAutoRefresh();
+        } else {
+            stopAutoRefresh();
+        }
+    });
 
     // Initial data fetch
     fetchDashboardData();
     fetchConfigData();
+    startAutoRefresh();
+    
+    // Set initial loading state
+    showLoadingOverlay();
+}
 
-    // Set up auto-refresh
-    setInterval(() => {
-        if (!elements.refreshBtn.disabled) {
-            fetchDashboardData();
-        }
-    }, REFRESH_INTERVAL_MS);
+function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(fetchDashboardData, REFRESH_INTERVAL_MS);
+}
+
+function stopAutoRefresh() {
+    clearInterval(autoRefreshInterval);
 }
 
 // Start the application

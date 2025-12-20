@@ -11,33 +11,67 @@
     <meta name="description" content="Cloud Insight AI - Real-time cloud infrastructure monitoring and analytics dashboard">
 </head>
 <body>
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Fetching latest insights...</p>
+    </div>
 
     <header>
         <div class="container">
-            <h1>Cloud Insight AI</h1>
+            <div class="header-main">
+                <h1>Cloud Insight AI</h1>
+                <div id="status-indicators" class="status-indicators">
+                    </div>
+            </div>
             <div class="header-controls">
                 <span id="last-updated" aria-live="polite"></span>
+                <div class="controls-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-refresh" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <label for="auto-refresh" class="toggle-label">Auto-refresh</label>
+                </div>
                 <button id="refresh-btn" aria-label="Refresh dashboard data">
                     <span>Refresh Data</span>
+                </button>
+                <button id="download-report-btn" aria-label="Download full report">
+                    <span>Download Report</span>
                 </button>
             </div>
         </div>
     </header>
 
     <main class="container">
-        <div id="status-banner" class="card" role="status" aria-live="polite">
-            <h2>Overall Status: <span id="status-indicator" aria-label="System status"></span></h2>
+        <div id="error-message" class="error-hidden" role="alert">
+            <p>Failed to fetch dashboard data. Please check the S3 URL and file permissions.</p>
+        </div>
+
+        <div class="summary-card">
+            <h3>Executive Summary</h3>
+            <div id="executive-summary-metrics" class="metrics">
+                </div>
         </div>
 
         <div class="dashboard-grid">
             <section class="card">
                 <h2>💰 Cost Insights</h2>
                 <p id="cost-summary" class="loading">Fetching data...</p>
+                <div class="chart-container">
+                    <canvas id="costTrendChart"></canvas>
+                </div>
             </section>
 
             <section class="card">
                 <h2>📊 Log Insights</h2>
                 <p id="log-summary" class="loading">Fetching data...</p>
+            </section>
+
+            <section class="card ai-insights-card">
+                <h3>🤖 AI-Powered Insights</h3>
+                <div id="ai-insights-list" class="insights-list">
+                    <div class="insight loading">Fetching data...</div>
+                </div>
             </section>
 
             <section class="card">
@@ -91,12 +125,9 @@
                 </div>
             </section>
         </div>
-        
-        <div id="error-message" class="error-hidden">
-            <p>Failed to fetch dashboard data. Please check the S3 URL and file permissions.</p>
-        </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
