@@ -22,43 +22,41 @@ const elements = {
     errorCount: document.getElementById('error-count'),
     warningCount: document.getElementById('warning-count'),
     infoCount: document.getElementById('info-count'),
-    trendIndicator: document.getElementById('trend-indicator'),
-    recommendationsList: document.getElementById('recommendations'),
+    recommendationDisplay: document.getElementById('recommendation-display'),
     configDetails: document.getElementById('config-details'),
     errorMessage: document.getElementById('error-message'),
     costTrendChart: document.getElementById('costTrendChart'),
+    logLevelChart: document.getElementById('logLevelChart'),
 };
 
 let autoRefreshInterval;
 let costChart;
+let logLevelPieChart;
+let recommendations = [];
+let currentRecommendationIndex = 0;
+let recommendationInterval;
 
 // --- DATA FETCHING ---
 async function fetchDashboardData() {
-    showLoadingOverlay();
+    showLoadingOverlay(true);
     try {
-        setLoadingState(true);
         const response = await fetch(S3_REPORT_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         updateDashboard(data);
         hideError();
     } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
-        showError(`Failed to fetch report data: ${error.message}. Please check the console for details.`);
+        showError(`Failed to fetch report data: ${error.message}.`);
     } finally {
-        setLoadingState(false);
-        hideLoadingOverlay();
+        showLoadingOverlay(false);
     }
 }
 
 async function fetchConfigData() {
     try {
         const response = await fetch(CONFIG_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const config = await response.json();
         updateConfigDisplay(config);
     } catch (error) {
@@ -69,12 +67,8 @@ async function fetchConfigData() {
 
 // --- UI UPDATES ---
 function updateDashboard(data) {
-    const criticalCount = data.log_levels?.critical || 0;
-    const warningCount = data.log_levels?.warning || 0;
-    const errorCount = data.log_levels?.error || 0;
-
     updateTimestamp(data.timestamp);
-    updateStatusIndicators(data.cost_health, criticalCount, warningCount);
+    updateStatusIndicators(data.cost_health, data.log_levels);
     updateExecutiveSummary(data);
     
     elements.costSummary.textContent = data.cost_summary || 'Not available';
@@ -83,38 +77,36 @@ function updateDashboard(data) {
     updateAiInsights(data.ai_insights);
     updateLogHealth(data.log_health_status);
     updateLogLevels(data.log_levels);
-    updateTrend(data.trend);
+    updateLogLevelChart(data.log_levels);
     updateRecommendations(data.recommendations);
     updateCostChart(data.cost_trend);
     
-    removeLoadingPlaceholders();
+    document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
 }
 
 function updateTimestamp(timestamp) {
     if (!timestamp) {
-        elements.lastUpdated.innerHTML = 'Last updated: N/A';
+        elements.lastUpdated.textContent = 'Last updated: N/A';
         return;
     }
     const date = new Date(timestamp);
-    const timeAgo = getTimeAgo(date);
-    elements.lastUpdated.innerHTML = `Last updated: <strong>${timeAgo}</strong> <span class="text-gray-400">(${date.toLocaleString()})</span>`;
+    elements.lastUpdated.textContent = `Last updated: ${date.toLocaleTimeString()}`;
 }
 
-function updateStatusIndicators(costHealth, criticals, warnings) {
+function updateStatusIndicators(costHealth, logLevels) {
+    const criticals = logLevels?.critical || 0;
+    const warnings = logLevels?.warning || 0;
     let indicators = '';
     
-    // Cost Status
     let costStatus = 'green';
     if (costHealth === 'warning') costStatus = 'yellow';
     if (costHealth === 'critical') costStatus = 'red';
-    indicators += `<div class="status-item"><span class="status-dot ${costStatus}"></span><span>Costs: Monitored</span></div>`;
+    indicators += `<div class="status-item"><span class="status-dot ${costStatus}"></span>Costs</div>`;
 
-    // Log Status
     let logStatus = 'green';
     if (warnings > 0) logStatus = 'yellow';
     if (criticals > 0) logStatus = 'red';
-    const logLabel = criticals > 0 ? `${criticals} Critical` : (warnings > 0 ? `${warnings} Warnings` : 'Nominal');
-    indicators += `<div class="status-item"><span class="status-dot ${logStatus}"></span><span>Logs: ${logLabel}</span></div>`;
+    indicators += `<div class="status-item"><span class="status-dot ${logStatus}"></span>Logs</div>`;
 
     elements.statusIndicators.innerHTML = indicators;
 }
@@ -125,19 +117,14 @@ function updateExecutiveSummary(data) {
     const totalLogs = Object.values(data.log_levels || {}).reduce((a, b) => a + b, 0);
     const errorCount = (data.log_levels?.critical || 0) + (data.log_levels?.error || 0);
 
-    const trendClass = costChange > 0 ? 'up' : 'down';
-    const trendSign = costChange > 0 ? '+' : '';
-
     const metricsHTML = `
         <div class="metric">
             <span class="metric-value">$${totalCost.toFixed(2)}</span>
-            <span class="metric-label">Total Costs</span>
-            <span class="metric-trend ${trendClass}">${trendSign}${costChange.toFixed(1)}%</span>
+            <span class="metric-label">Total Costs (${costChange > 0 ? '+' : ''}${costChange.toFixed(1)}%)</span>
         </div>
         <div class="metric">
             <span class="metric-value">${totalLogs}</span>
-            <span class="metric-label">Total Log Entries</span>
-            <span class="metric-trend">${errorCount} errors</span>
+            <span class="metric-label">Total Logs (${errorCount} errors)</span>
         </div>
     `;
     elements.executiveSummaryMetrics.innerHTML = metricsHTML;
@@ -153,10 +140,7 @@ function updateAiInsights(insights) {
             elements.aiInsightsList.appendChild(div);
         });
     } else {
-        const div = document.createElement('div');
-        div.className = 'insight';
-        div.textContent = 'No AI-powered insights available at this time.';
-        elements.aiInsightsList.appendChild(div);
+        elements.aiInsightsList.innerHTML = '<div class="insight">No AI insights available.</div>';
     }
 }
 
@@ -165,33 +149,24 @@ function updateLogHealth(status) {
     let emoji = '😐';
     let meterWidth = '50%';
     let meterColor = 'var(--primary-color)';
-    let meterValue = 50;
 
     switch (statusText.toLowerCase()) {
         case 'healthy':
             emoji = '😊';
             meterWidth = '100%';
             meterColor = 'var(--success-color)';
-            meterValue = 100;
             break;
         case 'degraded':
             emoji = '😡';
             meterWidth = '10%';
             meterColor = 'var(--error-color)';
-            meterValue = 10;
             break;
     }
 
     elements.healthStatus.textContent = statusText;
     elements.healthEmoji.textContent = emoji;
     elements.healthMeterBar.style.width = meterWidth;
-    elements.healthMeterBar.style.background = meterColor;
-    
-    const healthMeter = document.querySelector('.health-meter');
-    if (healthMeter) {
-        healthMeter.setAttribute('aria-valuenow', meterValue);
-        healthMeter.setAttribute('aria-label', `Health status: ${statusText} (${meterValue}%)`);
-    }
+    elements.healthMeterBar.style.backgroundColor = meterColor;
 }
 
 function updateLogLevels(levels) {
@@ -201,39 +176,46 @@ function updateLogLevels(levels) {
     elements.infoCount.textContent = levels?.info || 0;
 }
 
-function updateTrend(trend) {
-    let trendSymbol = '→'; // Neutral
-    if (trend === 'up') trendSymbol = '▲'; // Up
-    if (trend === 'down') trendSymbol = '▼'; // Down
-    elements.trendIndicator.textContent = trendSymbol;
+function updateRecommendations(newRecommendations) {
+    recommendations = newRecommendations || [];
+    if (recommendations.length > 0) {
+        currentRecommendationIndex = 0;
+        displayCurrentRecommendation();
+        startRecommendationCycling();
+    } else {
+        elements.recommendationDisplay.innerHTML = '<p>No recommendations.</p>';
+        stopRecommendationCycling();
+    }
 }
 
-function updateRecommendations(recommendations) {
-    elements.recommendationsList.innerHTML = '';
-    if (recommendations && recommendations.length > 0) {
-        recommendations.forEach(rec => {
-            const li = document.createElement('li');
-            li.textContent = rec;
-            elements.recommendationsList.appendChild(li);
-        });
-    } else {
-        const li = document.createElement('li');
-        li.textContent = 'No recommendations at this time.';
-        elements.recommendationsList.appendChild(li);
-    }
+function displayCurrentRecommendation() {
+    if (recommendations.length === 0) return;
+    elements.recommendationDisplay.innerHTML = `<p>${recommendations[currentRecommendationIndex]}</p>`;
+}
+
+function cycleRecommendations() {
+    currentRecommendationIndex = (currentRecommendationIndex + 1) % recommendations.length;
+    displayCurrentRecommendation();
+}
+
+function startRecommendationCycling() {
+    if (recommendationInterval) clearInterval(recommendationInterval);
+    recommendationInterval = setInterval(cycleRecommendations, 5000);
+}
+
+function stopRecommendationCycling() {
+    clearInterval(recommendationInterval);
 }
 
 function updateConfigDisplay(config) {
     const configData = config.analysis_config;
     if (!configData) {
-        elements.configDetails.textContent = 'Configuration format is invalid.';
+        elements.configDetails.textContent = 'Invalid config format.';
         return;
     }
-    
-    const html = `Logs Analyzed: ${configData.log_files_to_analyze.join(', ')}
-Cost Categories: ${configData.cost_categories_to_watch.join(', ')}
-Thresholds: Cost Increase > ${configData.abnormal_thresholds.cost_increase_percentage}%, Critical Logs > ${configData.abnormal_thresholds.critical_log_count}`;
-    
+    const html = `Logs: ${configData.log_files_to_analyze.join(', ')}
+Cost Cats: ${configData.cost_categories_to_watch.join(', ')}
+Thresholds: Cost > ${configData.abnormal_thresholds.cost_increase_percentage}%, Criticals > ${configData.abnormal_thresholds.critical_log_count}`;
     elements.configDetails.textContent = html;
 }
 
@@ -244,14 +226,15 @@ function updateCostChart(costTrend) {
     const data = costTrend.history.map(item => item.cost);
 
     const chartData = {
-        labels: labels,
+        labels,
         datasets: [{
-            label: 'Cost Over Time',
-            data: data,
-            borderColor: 'rgba(99, 102, 241, 1)',
-            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            label: 'Cost',
+            data,
+            borderColor: 'rgba(189, 147, 249, 1)',
+            backgroundColor: 'rgba(189, 147, 249, 0.2)',
             fill: true,
             tension: 0.4,
+            pointRadius: 0,
         }]
     };
 
@@ -259,45 +242,62 @@ function updateCostChart(costTrend) {
         costChart.data = chartData;
         costChart.update();
     } else {
-        const ctx = elements.costTrendChart.getContext('2d');
-        costChart = new Chart(ctx, {
+        costChart = new Chart(elements.costTrendChart, {
             type: 'line',
             data: chartData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
-            }
+            options: getChartOptions(false),
         });
     }
 }
 
-// --- UTILITY FUNCTIONS ---
-function getTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " years ago";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " months ago";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " days ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " hours ago";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " minutes ago";
-    return Math.floor(seconds) + " seconds ago";
+function updateLogLevelChart(levels) {
+    if (!levels) return;
+
+    const data = {
+        labels: ['Critical', 'Error', 'Warning', 'Info'],
+        datasets: [{
+            data: [levels.critical || 0, levels.error || 0, levels.warning || 0, levels.info || 0],
+            backgroundColor: ['var(--critical-color)', 'var(--error-color)', 'var(--warning-color)', 'var(--primary-light)'],
+            borderWidth: 0,
+        }]
+    };
+
+    if (logLevelPieChart) {
+        logLevelPieChart.data = data;
+        logLevelPieChart.update();
+    } else {
+        logLevelPieChart = new Chart(elements.logLevelChart, {
+            type: 'doughnut',
+            data: data,
+            options: getChartOptions(true, 'bottom'),
+        });
+    }
 }
 
+function getChartOptions(isPie = false, legendPos = 'top') {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: isPie ? {} : {
+            y: { beginAtZero: true, ticks: { color: 'var(--text-tertiary)' }, grid: { color: 'var(--border-color)' } },
+            x: { ticks: { color: 'var(--text-tertiary)' }, grid: { color: 'var(--border-color)' } }
+        },
+        plugins: {
+            legend: { display: isPie, position: legendPos, labels: { color: 'var(--text-tertiary)' } },
+            tooltip: {
+                backgroundColor: 'var(--bg-primary)',
+                titleColor: 'var(--text-secondary)',
+                bodyColor: 'var(--text-primary)',
+            }
+        }
+    };
+}
+
+// --- UTILITY & EVENT HANDLERS ---
 function downloadReport() {
-    window.open(S3_REPORT_URL.replace('.json', '.txt'), '_blank');
+    window.open(S3_REPORT_URL, '_blank');
 }
 
-// --- ERROR HANDLING ---
 function showError(message) {
     elements.errorMessage.querySelector('p').textContent = message;
     elements.errorMessage.classList.remove('error-hidden');
@@ -307,43 +307,21 @@ function hideError() {
     elements.errorMessage.classList.add('error-hidden');
 }
 
-// --- LOADING STATES ---
-function showLoadingOverlay() {
-    elements.loadingOverlay.classList.remove('hidden');
+function showLoadingOverlay(show) {
+    elements.loadingOverlay.style.display = show ? 'flex' : 'none';
 }
 
-function hideLoadingOverlay() {
-    elements.loadingOverlay.classList.add('hidden');
-}
-
-function setLoadingState(isLoading) {
-    elements.refreshBtn.classList.toggle('loading', isLoading);
-    elements.refreshBtn.disabled = isLoading;
-}
-
-function removeLoadingPlaceholders() {
-    document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
-}
-
-// --- INITIALIZATION ---
 function initialize() {
     elements.refreshBtn.addEventListener('click', fetchDashboardData);
     elements.downloadReportBtn.addEventListener('click', downloadReport);
-    elements.autoRefreshToggle.addEventListener('change', () => {
-        if (elements.autoRefreshToggle.checked) {
-            startAutoRefresh();
-        } else {
-            stopAutoRefresh();
-        }
+    elements.autoRefreshToggle.addEventListener('change', (e) => {
+        e.target.checked ? startAutoRefresh() : stopAutoRefresh();
     });
 
-    // Initial data fetch
     fetchDashboardData();
     fetchConfigData();
     startAutoRefresh();
-    
-    // Set initial loading state
-    showLoadingOverlay();
+    showLoadingOverlay(true);
 }
 
 function startAutoRefresh() {
@@ -355,5 +333,4 @@ function stopAutoRefresh() {
     clearInterval(autoRefreshInterval);
 }
 
-// Start the application
 document.addEventListener('DOMContentLoaded', initialize);

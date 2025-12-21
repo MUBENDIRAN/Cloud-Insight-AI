@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Insight AI Dashboard</title>
+    <title>Cloud Insight AI - Compact Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <meta name="description" content="Cloud Insight AI - Real-time cloud infrastructure monitoring and analytics dashboard">
+    <meta name="description" content="Cloud Insight AI - Real-time, compact, and interactive cloud infrastructure monitoring dashboard.">
 </head>
 <body>
     <div id="loading-overlay" class="loading-overlay">
@@ -16,116 +16,110 @@
         <p>Fetching latest insights...</p>
     </div>
 
-    <header>
-        <div class="container">
-            <div class="header-main">
-                <h1>Cloud Insight AI</h1>
-                <div id="status-indicators" class="status-indicators">
-                    </div>
-            </div>
+    <div class="dashboard-container">
+        <header>
+            <h1>Cloud Insight AI</h1>
             <div class="header-controls">
-                <span id="last-updated" aria-live="polite"></span>
-                <div class="controls-group">
+                <div class="control-group">
+                    <label for="auto-refresh" class="toggle-label">Auto-refresh</label>
                     <label class="toggle-switch">
                         <input type="checkbox" id="auto-refresh" checked>
                         <span class="slider"></span>
                     </label>
-                    <label for="auto-refresh" class="toggle-label">Auto-refresh</label>
                 </div>
-                <button id="refresh-btn" aria-label="Refresh dashboard data">
-                    <span>Refresh Data</span>
-                </button>
-                <button id="download-report-btn" aria-label="Download full report">
-                    <span>Download Report</span>
-                </button>
+                <button id="refresh-btn" aria-label="Refresh dashboard data">Refresh</button>
+                <button id="download-report-btn" aria-label="Download full report">Report</button>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="container">
-        <div id="error-message" class="error-hidden" role="alert">
-            <p>Failed to fetch dashboard data. Please check the S3 URL and file permissions.</p>
-        </div>
+        <main>
+            <div class="grid-container">
+                <section class="card card-summary">
+                    <h3>Executive Summary</h3>
+                    <div id="executive-summary-metrics" class="metrics"></div>
+                </section>
 
-        <div class="summary-card">
-            <h3>Executive Summary</h3>
-            <div id="executive-summary-metrics" class="metrics">
-                </div>
-        </div>
-
-        <div class="dashboard-grid">
-            <section class="card">
-                <h2>💰 Cost Insights</h2>
-                <p id="cost-summary" class="loading">Fetching data...</p>
-                <div class="chart-container">
-                    <canvas id="costTrendChart"></canvas>
-                </div>
-            </section>
-
-            <section class="card">
-                <h2>📊 Log Insights</h2>
-                <p id="log-summary" class="loading">Fetching data...</p>
-            </section>
-
-            <section class="card ai-insights-card">
-                <h3>🤖 AI-Powered Insights</h3>
-                <div id="ai-insights-list" class="insights-list">
-                    <div class="insight loading">Fetching data...</div>
-                </div>
-            </section>
-
-            <section class="card">
-                <h2>🏥 Log Health Analysis</h2>
-                <div class="health-meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                    <div id="health-meter-bar"></div>
-                </div>
-                <div class="health-display">
-                    <span id="health-emoji" aria-hidden="true"></span>
-                    <p id="health-status" class="loading">Fetching data...</p>
-                </div>
-            </section>
-
-            <section class="card">
-                <h2>📈 Log Levels & Trend</h2>
-                <div class="counts-grid">
-                    <div class="count-item">
-                        <h3>Critical</h3>
-                        <span id="critical-count" class="badge badge-critical" aria-label="Critical log count">0</span>
+                <section class="card card-cost">
+                    <h2>Cost Insights</h2>
+                    <p id="cost-summary" class="loading">Fetching data...</p>
+                    <div class="chart-container">
+                        <canvas id="costTrendChart"></canvas>
                     </div>
-                    <div class="count-item">
-                        <h3>Error</h3>
-                        <span id="error-count" class="badge badge-error" aria-label="Error log count">0</span>
-                    </div>
-                    <div class="count-item">
-                        <h3>Warning</h3>
-                        <span id="warning-count" class="badge badge-warning" aria-label="Warning log count">0</span>
-                    </div>
-                    <div class="count-item">
-                        <h3>Info</h3>
-                        <span id="info-count" class="badge badge-info" aria-label="Info log count">0</span>
-                    </div>
-                    <div class="count-item">
-                        <h3>Trend</h3>
-                        <span id="trend-indicator" aria-label="Log trend">→</span>
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <section class="card full-width">
-                <h2>💡 Recommendations</h2>
-                <ul id="recommendations" role="list">
-                    <li class="loading">Fetching data...</li>
-                </ul>
-            </section>
-            
-            <section class="card full-width">
-                <h2>⚙️ Current Configuration</h2>
-                <div id="config-details" class="loading">
-                    <p>Fetching configuration...</p>
-                </div>
-            </section>
-        </div>
-    </main>
+                <section class="card card-logs">
+                    <h2>Log Insights</h2>
+                    <p id="log-summary" class="loading">Fetching data...</p>
+                    <div class="counts-grid">
+                        <div class="count-item">
+                            <span id="critical-count" class="badge badge-critical">0</span>
+                            <label>Critical</label>
+                        </div>
+                        <div class="count-item">
+                            <span id="error-count" class="badge badge-error">0</span>
+                            <label>Error</label>
+                        </div>
+                        <div class="count-item">
+                            <span id="warning-count" class="badge badge-warning">0</span>
+                            <label>Warning</label>
+                        </div>
+                        <div class="count-item">
+                            <span id="info-count" class="badge badge-info">0</span>
+                            <label>Info</label>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card card-ai">
+                    <h3>AI-Powered Insights</h3>
+                    <div id="ai-insights-list" class="insights-list">
+                        <div class="insight loading">Fetching data...</div>
+                    </div>
+                </section>
+
+                <section class="card card-health">
+                    <h2>Log Health</h2>
+                    <div class="health-display">
+                        <span id="health-emoji"></span>
+                        <p id="health-status" class="loading">Fetching data...</p>
+                    </div>
+                    <div class="health-meter">
+                        <div id="health-meter-bar"></div>
+                    </div>
+                </section>
+
+                <section class="card card-distribution">
+                    <h2>Log Distribution</h2>
+                    <div class="chart-container">
+                        <canvas id="logLevelChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="card card-recommendations">
+                    <h2>Recommendations</h2>
+                    <div id="recommendation-display" class="recommendation-display">
+                        <p class="loading">Fetching recommendations...</p>
+                    </div>
+                </section>
+                
+                <section class="card card-config">
+                    <h2>Configuration</h2>
+                    <div id="config-details" class="loading">
+                        <p>Fetching configuration...</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <div id="status-indicators"></div>
+            <span id="last-updated" aria-live="polite"></span>
+        </footer>
+    </div>
+
+    <div id="error-message" class="error-hidden" role="alert">
+        <p>Failed to fetch dashboard data.</p>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
