@@ -66,22 +66,51 @@ async function fetchConfigData() {
 }
 
 // --- UI UPDATES ---
+function displayChanges(changes) {
+    if (!Array.isArray(changes) || changes.length === 0) return;
+
+    const changesHTML = `
+        <div style="font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-tertiary);">
+            <strong>Changes since last run:</strong>
+            ${changes.map(c => `<div>• ${c}</div>`).join('')}
+        </div>
+    `;
+
+    if (elements.executiveSummaryMetrics) {
+        elements.executiveSummaryMetrics.insertAdjacentHTML(
+            'afterend',
+            changesHTML
+        );
+    }
+}
+
 function updateDashboard(data) {
+    window.dashboardData = data; // <-- ADD THIS LINE (important)
+
     updateTimestamp(data.timestamp);
     updateStatusIndicators(data.cost_health, data.log_levels);
     updateExecutiveSummary(data);
-    
+
     elements.costSummary.textContent = data.cost_summary || 'Not available';
     elements.logSummary.textContent = data.log_summary || 'Not available';
-    
+
     updateAiInsights(data.ai_insights);
     updateLogHealth(data.log_health_status);
     updateLogLevels(data.log_levels);
     updateLogLevelChart(data.log_levels);
     updateRecommendations(data.recommendations);
     updateCostChart(data.cost_trend);
-    
-    document.querySelectorAll('.loading').forEach(el => el.classList.remove('loading'));
+
+    // NEW
+    displayChanges(data.changes_since_last);
+
+    if (data.run_mode && elements.lastUpdated) {
+        elements.lastUpdated.innerHTML +=
+            `<br><small>${data.run_mode}</small>`;
+    }
+
+    document.querySelectorAll('.loading')
+        .forEach(el => el.classList.remove('loading'));
 }
 
 function updateTimestamp(timestamp) {
@@ -146,27 +175,29 @@ function updateAiInsights(insights) {
 
 function updateLogHealth(status) {
     const statusText = status || 'Stable';
-    let emoji = '😐';
-    let meterWidth = '50%';
-    let meterColor = 'var(--primary-color)';
 
-    switch (statusText.toLowerCase()) {
-        case 'healthy':
-            emoji = '😊';
-            meterWidth = '100%';
-            meterColor = 'var(--success-color)';
-            break;
-        case 'degraded':
-            emoji = '😡';
-            meterWidth = '10%';
-            meterColor = 'var(--error-color)';
-            break;
+    const healthScore = window.dashboardData?.health_score ?? 50;
+    const healthReason = window.dashboardData?.health_reason ?? 'No data available';
+
+    let emoji = '😐';
+    let meterColor = 'var(--warning-color)';
+
+    if (healthScore >= 80) {
+        emoji = '😊';
+        meterColor = 'var(--success-color)';
+    } else if (healthScore < 50) {
+        emoji = '😡';
+        meterColor = 'var(--error-color)';
     }
 
     elements.healthStatus.textContent = statusText;
     elements.healthEmoji.textContent = emoji;
-    elements.healthMeterBar.style.width = meterWidth;
+    elements.healthMeterBar.style.width = `${healthScore}%`;
     elements.healthMeterBar.style.backgroundColor = meterColor;
+
+    // Tooltip = explainability (VERY GOOD for interviews)
+    elements.healthStatus.title =
+        `Health Score: ${healthScore}/100\nReason: ${healthReason}`;
 }
 
 function updateLogLevels(levels) {
@@ -221,6 +252,15 @@ Thresholds: Cost > ${configData.abnormal_thresholds.cost_increase_percentage}%, 
 
 function updateCostChart(costTrend) {
     if (!costTrend || !costTrend.history) return;
+
+    const contributor = window.dashboardData?.primary_cost_contributor;
+    if (contributor && elements.costSummary) {
+        elements.costSummary.innerHTML =
+            `${elements.costSummary.textContent}
+         <br><small style="color: var(--text-tertiary);">
+         Primary contributor: ${contributor}
+         </small>`;
+    }
 
     const labels = costTrend.history.map(item => new Date(item.date).toLocaleDateString());
     const data = costTrend.history.map(item => item.cost);
