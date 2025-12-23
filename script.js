@@ -201,41 +201,74 @@ function updateLogHealth(status) {
 }
 
 function updateLogLevels(levels) {
-    elements.criticalCount.textContent = levels?.critical || 0;
-    elements.errorCount.textContent = levels?.error || 0;
-    elements.warningCount.textContent = levels?.warning || 0;
-    elements.infoCount.textContent = levels?.info || 0;
+    const criticalCount = levels?.critical || 0;
+    const errorCount = levels?.error || 0;
+    const warningCount = levels?.warning || 0;
+    const infoCount = levels?.info || 0;
+    
+    elements.criticalCount.textContent = criticalCount;
+    elements.errorCount.textContent = errorCount;
+    elements.warningCount.textContent = warningCount;
+    elements.infoCount.textContent = infoCount;
+    
+    // 🔴 ADD CLICK HANDLERS FOR INTERACTIVITY
+    elements.errorCount.style.cursor = 'pointer';
+    elements.errorCount.onclick = () => showErrorDetails(errorCount);
+    
+    elements.warningCount.style.cursor = 'pointer';
+    elements.warningCount.onclick = () => showWarningDetails(warningCount);
+    
+    elements.criticalCount.style.cursor = 'pointer';
+    elements.criticalCount.onclick = () => showErrorDetails(criticalCount);
+}
+
+function showErrorDetails(count) {
+    if (!window.dashboardData?.error_details) {
+        alert(`${count} errors detected. Detailed error tracking is being implemented.`);
+        return;
+    }
+    
+    const errors = window.dashboardData.error_details.slice(0, 5);
+    const details = errors.map(e => 
+        `🔴 ${e.id}: ${e.type}\n${e.message}\n💡 ${e.recommendation}\n`
+    ).join('\n');
+    
+    alert(`Top ${errors.length} Errors:\n\n${details}`);
+}
+
+function showWarningDetails(count) {
+    if (!window.dashboardData?.warning_details) {
+        alert(`${count} warnings detected. Enable detailed logging in backend.`);
+        return;
+    }
+    
+    const warnings = window.dashboardData.warning_details.slice(0, 5);
+    const details = warnings.map(w => 
+        `⚠️ ${w.id}: ${w.type}\n${w.message}\n`
+    ).join('\n');
+    
+    alert(`Top ${warnings.length} Warnings:\n\n${details}`);
 }
 
 function updateRecommendations(newRecommendations) {
     recommendations = newRecommendations || [];
-    if (recommendations.length > 0) {
-        currentRecommendationIndex = 0;
-        displayCurrentRecommendation();
-        startRecommendationCycling();
-    } else {
-        elements.recommendationDisplay.innerHTML = '<p>No recommendations.</p>';
-        stopRecommendationCycling();
+    
+    if (recommendations.length === 0) {
+        elements.recommendationDisplay.innerHTML = '<p>✅ All systems optimal</p>';
+        return;
     }
-}
-
-function displayCurrentRecommendation() {
-    if (recommendations.length === 0) return;
-    elements.recommendationDisplay.innerHTML = `<p>${recommendations[currentRecommendationIndex]}</p>`;
-}
-
-function cycleRecommendations() {
-    currentRecommendationIndex = (currentRecommendationIndex + 1) % recommendations.length;
-    displayCurrentRecommendation();
-}
-
-function startRecommendationCycling() {
-    if (recommendationInterval) clearInterval(recommendationInterval);
-    recommendationInterval = setInterval(cycleRecommendations, 5000);
-}
-
-function stopRecommendationCycling() {
-    clearInterval(recommendationInterval);
+    
+    // 🔴 SHOW ALL RECOMMENDATIONS AT ONCE (NO CYCLING)
+    const html = recommendations.map((rec, i) => 
+        `<div style="text-align: left; padding: 0.5rem; border-left: 3px solid var(--primary-color); margin: 0.5rem 0; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem;">
+            <strong>${i + 1}.</strong> ${rec}
+        </div>`
+    ).join('');
+    
+    elements.recommendationDisplay.innerHTML = html;
+    elements.recommendationDisplay.style.textAlign = 'left';
+    elements.recommendationDisplay.style.overflowY = 'auto';
+    elements.recommendationDisplay.style.maxHeight = '100%';
 }
 
 function updateConfigDisplay(config) {

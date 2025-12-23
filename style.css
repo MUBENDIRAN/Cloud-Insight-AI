@@ -203,6 +203,12 @@ canvas {
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: var(--spacing-xs);
+    transition: transform 0.2s ease, color 0.2s ease; /* ADD THIS */
+}
+
+.badge:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
 }
 
 .badge-critical { color: var(--critical-color); }
