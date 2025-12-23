@@ -105,7 +105,7 @@ function updateDashboard(data) {
     displayChanges(data.changes_since_last);
 
     if (data.run_mode && elements.lastUpdated) {
-        elements.lastUpdated.innerHTML +=
+        elements.lastUpdated.innerHTML += 
             `<br><small>${data.run_mode}</small>`;
     }
 
@@ -224,30 +224,47 @@ function updateLogLevels(levels) {
 
 function showErrorDetails(count) {
     if (!window.dashboardData?.error_details) {
-        alert(`${count} errors detected. Detailed error tracking is being implemented.`);
+        showModal('Error Details', `<p>${count} errors detected. Detailed error tracking is being implemented.</p>`);
         return;
     }
     
-    const errors = window.dashboardData.error_details.slice(0, 5);
-    const details = errors.map(e => 
-        `🔴 ${e.id}: ${e.type}\n${e.message}\n💡 ${e.recommendation}\n`
-    ).join('\n');
+    const errors = window.dashboardData.error_details.slice(0, 10);
     
-    alert(`Top ${errors.length} Errors:\n\n${details}`);
+    const html = errors.map(e => `
+        <div class="error-item">
+            <div class="error-item-header">
+                <span class="error-id">🔴 ${e.id}</span>
+                <span class="error-type">${e.type}</span>
+            </div>
+            <div class="error-message">${e.message}</div>
+            ${e.recommendation ? `<div class="error-recommendation">💡 ${e.recommendation}</div>` : ''}
+            ${e.timestamp ? `<div class="error-timestamp">⏰ ${e.timestamp}</div>` : ''}
+        </div>
+    `).join('');
+    
+    showModal(`Error Details (${errors.length} of ${count})`, html);
 }
 
 function showWarningDetails(count) {
     if (!window.dashboardData?.warning_details) {
-        alert(`${count} warnings detected. Enable detailed logging in backend.`);
+        showModal('Warning Details', `<p>${count} warnings detected. Enable detailed logging in backend.</p>`);
         return;
     }
     
-    const warnings = window.dashboardData.warning_details.slice(0, 5);
-    const details = warnings.map(w => 
-        `⚠️ ${w.id}: ${w.type}\n${w.message}\n`
-    ).join('\n');
+    const warnings = window.dashboardData.warning_details.slice(0, 10);
     
-    alert(`Top ${warnings.length} Warnings:\n\n${details}`);
+    const html = warnings.map(w => `
+        <div class="warning-item">
+            <div class="error-item-header">
+                <span class="error-id">⚠️ ${w.id}</span>
+                <span class="error-type">${w.type}</span>
+            </div>
+            <div class="error-message">${w.message}</div>
+            ${w.timestamp ? `<div class="error-timestamp">⏰ ${w.timestamp}</div>` : ''}
+        </div>
+    `).join('');
+    
+    showModal(`Warning Details (${warnings.length} of ${count})`, html);
 }
 
 function updateRecommendations(newRecommendations) {
@@ -513,3 +530,32 @@ function stopAutoRefresh() {
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
+// Modal utility functions
+function showModal(title, bodyHTML) {
+    const modal = document.getElementById('error-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    
+    modalTitle.textContent = title;
+    modalBody.innerHTML = bodyHTML;
+    modal.style.display = 'flex';
+    
+    // Close handlers
+    document.getElementById('modal-close').onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+    
+    // ESC key to close
+    document.addEventListener('keydown', handleModalEscape);
+}
+
+function closeModal() {
+    const modal = document.getElementById('error-modal');
+    modal.style.display = 'none';
+    document.removeEventListener('keydown', handleModalEscape);
+}
+
+function handleModalEscape(e) {
+    if (e.key === 'Escape') closeModal();
+}
