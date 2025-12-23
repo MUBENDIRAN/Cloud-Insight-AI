@@ -28,6 +28,7 @@ const elements = {
 };
 
 let autoRefreshInterval;
+let costBreakdownChart = null; // ADD THIS
 let logLevelPieChart;
 let recommendations = [];
 let currentRecommendationIndex = 0;
@@ -351,6 +352,12 @@ function updateCostBreakdown(costBreakdown) {
     if (!costBreakdown || costBreakdown.length === 0) return;
     
     const canvas = document.getElementById('costBreakdownChart');
+    
+    // 🔴 DESTROY OLD CHART FIRST
+    if (costBreakdownChart) {
+        costBreakdownChart.destroy();
+    }
+    
     const labels = costBreakdown.map(item => item.service);
     const data = costBreakdown.map(item => item.cost);
     const colors = [
@@ -358,7 +365,8 @@ function updateCostBreakdown(costBreakdown) {
         '#ffb86c', '#ff5555', '#f1fa8c'
     ];
     
-    new Chart(canvas, {
+    // 🔴 ASSIGN TO VARIABLE
+    costBreakdownChart = new Chart(canvas, {
         type: 'doughnut',
         data: {
             labels,
