@@ -272,53 +272,122 @@ function updateRecommendations(newRecommendations) {
 }
 
 function updateConfigDisplay(config) {
-    const configData = config.analysis_config;
-    if (!configData) {
-        elements.configDetails.textContent = 'Invalid config format.';
+    const cfg = config?.analysis_config;
+    if (!cfg) {
+        elements.configDetails.innerHTML = '<p style="color: var(--error-color);">❌ Configuration unavailable</p>';
         return;
     }
-    const html = `Logs: ${configData.log_files_to_analyze.join(', ')}
-Cost Cats: ${configData.cost_categories_to_watch.join(', ')}
-Thresholds: Cost > ${configData.abnormal_thresholds.cost_increase_percentage}%, Criticals > ${configData.abnormal_thresholds.critical_log_count}`;
-    elements.configDetails.textContent = html;
+    
+    // 🔴 BETTER FORMATTING WITH VISUAL HIERARCHY
+    elements.configDetails.innerHTML = `
+        <div style="font-family: 'Fira Code', monospace; font-size: 0.8rem;">
+            <div style="margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-primary); border-radius: 4px;">
+                <strong style="color: var(--text-secondary);">📋 Log Sources:</strong><br>
+                ${cfg.log_files_to_analyze.map(f => `  • ${f}`).join('<br>')}
+            </div>
+            
+            <div style="margin-bottom: 1rem; padding: 0.5rem; background: var(--bg-primary); border-radius: 4px;">
+                <strong style="color: var(--text-secondary);">💰 Cost Categories:</strong><br>
+                ${cfg.cost_categories_to_watch.map(c => `  • ${c}`).join('<br>')}
+            </div>
+            
+            <div style="padding: 0.5rem; background: var(--bg-primary); border-radius: 4px;">
+                <strong style="color: var(--text-secondary);">⚠️ Alert Thresholds:</strong><br>
+                  • Cost Increase: <span style="color: var(--warning-color);">${cfg.abnormal_thresholds.cost_increase_percentage}%</span><br>
+                  • Critical Logs: <span style="color: var(--error-color);">${cfg.abnormal_thresholds.critical_log_count}</span>
+            </div>
+            
+            <div style="margin-top: 1rem; padding: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-tertiary);">
+                Version: ${config.project_info?.version || 'N/A'}<br>
+                Last Updated: ${config.project_info?.last_updated ? new Date(config.project_info.last_updated).toLocaleString() : 'N/A'}
+            </div>
+        </div>
+    `;
 }
 
 function updateCostChart(costTrend) {
     if (!costTrend || !costTrend.history) return;
 
-    const contributor = window.dashboardData?.primary_cost_contributor;
-    if (contributor && elements.costSummary) {
-        elements.costSummary.innerHTML =
-            `${elements.costSummary.textContent}
-         <br><small style="color: var(--text-tertiary);">
-         Primary contributor: ${contributor}
-         </small>`;
-    }
-
-    const labels = costTrend.history.map(item => new Date(item.date).toLocaleDateString());
+    const labels = costTrend.history.map(item => 
+        new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    );
     const data = costTrend.history.map(item => item.cost);
 
     const chartData = {
         labels,
         datasets: [{
-            label: 'Cost',
+            label: 'Cost ($)',
             data,
-            borderColor: 'rgba(189, 147, 249, 1)',
+            borderColor: '#bd93f9',
             backgroundColor: 'rgba(189, 147, 249, 0.2)',
             fill: true,
             tension: 0.4,
-            pointRadius: 0,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: '#bd93f9',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
         }]
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(30, 30, 46, 0.95)',
+                titleColor: '#bd93f9',
+                bodyColor: '#f8f8f2',
+                borderColor: '#44475a',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {
+                    label: function(context) {
+                        return `Cost: $${context.parsed.y.toFixed(2)}`;
+                    },
+                    afterBody: function() {
+                        const breakdown = window.dashboardData?.cost_breakdown;
+                        if (!breakdown || breakdown.length === 0) return '';
+                        
+                        const top3 = breakdown.slice(0, 3);
+                        return '\n💡 Top Services:\n' + 
+                            top3.map(s => `  ${s.service}: $${s.cost}`).join('\n');
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { 
+                    color: '#6272a4',
+                    callback: function(value) {
+                        return '$' + value.toFixed(2);
+                    }
+                },
+                grid: { color: '#44475a' }
+            },
+            x: {
+                ticks: { color: '#6272a4' },
+                grid: { color: '#44475a' }
+            }
+        }
     };
 
     if (costChart) {
         costChart.data = chartData;
+        costChart.options = options;
         costChart.update();
     } else {
         costChart = new Chart(elements.costTrendChart, {
             type: 'line',
             data: chartData,
-            options: getChartOptions(false),
+            options: options
         });
     }
 }
@@ -329,20 +398,57 @@ function updateLogLevelChart(levels) {
     const data = {
         labels: ['Critical', 'Error', 'Warning', 'Info'],
         datasets: [{
-            data: [levels.critical || 0, levels.error || 0, levels.warning || 0, levels.info || 0],
-            backgroundColor: ['var(--critical-color)', 'var(--error-color)', 'var(--warning-color)', 'var(--primary-light)'],
-            borderWidth: 0,
+            data: [
+                levels.critical || 0,
+                levels.error || 0,
+                levels.warning || 0,
+                levels.info || 0
+            ],
+            backgroundColor: [
+                '#991b1b',  // Dark red
+                '#ef4444',  // Red
+                '#f59e0b',  // Orange/Yellow
+                '#818cf8'   // Blue
+            ],
+            borderWidth: 2,
+            borderColor: '#2d2f41',
         }]
+    };
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    color: '#f8f8f2',  // 🔴 BRIGHT TEXT
+                    font: { size: 11 },
+                    padding: 10
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(30, 30, 46, 0.95)',
+                titleColor: '#bd93f9',
+                bodyColor: '#f8f8f2',
+                borderColor: '#44475a',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: true
+            }
+        }
     };
 
     if (logLevelPieChart) {
         logLevelPieChart.data = data;
+        logLevelPieChart.options = options;
         logLevelPieChart.update();
     } else {
         logLevelPieChart = new Chart(elements.logLevelChart, {
             type: 'doughnut',
             data: data,
-            options: getChartOptions(true, 'bottom'),
+            options: options
         });
     }
 }
