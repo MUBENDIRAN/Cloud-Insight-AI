@@ -1,9 +1,3 @@
-// --- CONFIGURATION ---
-const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
-const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json';
-const REFRESH_INTERVAL_MS = 30000; // 30 seconds
-
-// --- DOM ELEMENT REFERENCES ---
 const elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
     lastUpdated: document.getElementById('last-updated'),
@@ -12,7 +6,6 @@ const elements = {
     autoRefreshToggle: document.getElementById('auto-refresh'),
     statusIndicators: document.getElementById('status-indicators'),
     executiveSummaryMetrics: document.getElementById('executive-summary-metrics'),
-    costSummary: document.getElementById('cost-summary'),
     logSummary: document.getElementById('log-summary'),
     aiInsightsList: document.getElementById('ai-insights-list'),
     healthStatus: document.getElementById('health-status'),
@@ -25,12 +18,10 @@ const elements = {
     recommendationDisplay: document.getElementById('recommendation-display'),
     configDetails: document.getElementById('config-details'),
     errorMessage: document.getElementById('error-message'),
-    costTrendChart: document.getElementById('costTrendChart'),
     logLevelChart: document.getElementById('logLevelChart'),
 };
 
 let autoRefreshInterval;
-let costChart;
 let logLevelPieChart;
 let recommendations = [];
 let currentRecommendationIndex = 0;
@@ -100,7 +91,6 @@ function updateDashboard(data) {
     updateStatusIndicators(data.cost_health, data.log_levels);
     updateExecutiveSummary(data);
 
-    elements.costSummary.textContent = data.cost_summary || 'Not available';
     elements.logSummary.textContent = data.log_summary || 'Not available';
 
     updateAiInsights(data.ai_insights);
@@ -108,7 +98,7 @@ function updateDashboard(data) {
     updateLogLevels(data.log_levels);
     updateLogLevelChart(data.log_levels);
     updateRecommendations(data.recommendations);
-    updateCostChart(data.cost_trend);
+    updateCostBreakdown(data.cost_breakdown);
 
     // NEW
     displayChanges(data.changes_since_last);
@@ -170,16 +160,29 @@ function updateExecutiveSummary(data) {
 
 function updateAiInsights(insights) {
     elements.aiInsightsList.innerHTML = '';
-    if (insights && insights.length > 0) {
-        insights.forEach(insight => {
-            const div = document.createElement('div');
-            div.className = 'insight';
-            div.innerHTML = `<strong>${insight.title}:</strong> ${insight.finding}`;
-            elements.aiInsightsList.appendChild(div);
-        });
-    } else {
-        elements.aiInsightsList.innerHTML = '<div class="insight">No AI insights available.</div>';
+    
+    if (!insights || insights.length === 0) {
+        elements.aiInsightsList.innerHTML = '<div class="insight">✅ No anomalies detected</div>';
+        return;
     }
+    
+    insights.forEach(insight => {
+        const severityColor = {
+            'critical': 'var(--error-color)',
+            'high': 'var(--warning-color)',
+            'medium': 'var(--info-color)'
+        }[insight.severity] || 'var(--primary-color)';
+        
+        const div = document.createElement('div');
+        div.className = 'insight';
+        div.style.borderLeftColor = severityColor;
+        div.innerHTML = `
+            <strong>${insight.title}</strong> (${(insight.confidence * 100).toFixed(0)}% confidence)
+            <br>${insight.finding}
+            <br><span style="color: ${severityColor};">→ ${insight.action}</span>
+        `;
+        elements.aiInsightsList.appendChild(div);
+    });
 }
 
 function updateLogHealth(status) {
@@ -229,6 +232,9 @@ function updateLogLevels(levels) {
     
     elements.criticalCount.style.cursor = 'pointer';
     elements.criticalCount.onclick = () => showErrorDetails(criticalCount);
+
+    elements.infoCount.style.cursor = 'pointer';
+    elements.infoCount.onclick = () => showInfoDetails(infoCount);
 }
 
 function showErrorDetails(count) {
@@ -274,6 +280,10 @@ function showWarningDetails(count) {
     `).join('');
     
     showModal(`Warning Details (${warnings.length} of ${count})`, html);
+}
+
+function showInfoDetails(count) {
+    showModal('Info Logs', `<p>${count} informational logs. No action required.</p>`);
 }
 
 function updateRecommendations(newRecommendations) {
@@ -331,94 +341,48 @@ function updateConfigDisplay(config) {
     `;
 }
 
-function updateCostChart(costTrend) {
-    if (!costTrend || !costTrend.history) {
-        console.warn('No cost trend data available');
-        return;
-    }
-
-    const labels = costTrend.history.map(item => 
-        new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    );
-    const data = costTrend.history.map(item => item.cost);
-
-    const chartData = {
-        labels,
-        datasets: [{
-            label: 'Cost ($)',
-            data,
-            borderColor: '#bd93f9',
-            backgroundColor: 'rgba(189, 147, 249, 0.2)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 7,
-            pointBackgroundColor: '#bd93f9',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-        }]
-    };
-
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            mode: 'index',
-            intersect: false,
+function updateCostBreakdown(costBreakdown) {
+    if (!costBreakdown || costBreakdown.length === 0) return;
+    
+    const canvas = document.getElementById('costBreakdownChart');
+    const labels = costBreakdown.map(item => item.service);
+    const data = costBreakdown.map(item => item.cost);
+    const colors = [
+        '#bd93f9', '#ff79c6', '#8be9fd', '#50fa7b', 
+        '#ffb86c', '#ff5555', '#f1fa8c'
+    ];
+    
+    new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: colors.slice(0, data.length),
+                borderWidth: 2,
+                borderColor: '#2d2f41'
+            }]
         },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(30, 30, 46, 0.95)',
-                titleColor: '#bd93f9',
-                bodyColor: '#f8f8f2',
-                borderColor: '#44475a',
-                borderWidth: 1,
-                padding: 12,
-                callbacks: {
-                    label: function(context) {
-                        return `Cost: $${context.parsed.y.toFixed(2)}`;
-                    },
-                    afterBody: function() {
-                        const breakdown = window.dashboardData?.cost_breakdown;
-                        if (!breakdown || breakdown.length === 0) return '';
-                        
-                        const top3 = breakdown.slice(0, 3);
-                        return '\n💡 Top Services:\n' + 
-                            top3.map(s => `  ${s.service}: $${s.cost}`).join('\n');
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#f8f8f2', font: { size: 10 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return `${context.label}: $${context.parsed.toFixed(2)} (${percentage}%)`;
+                        }
                     }
                 }
             }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { 
-                    color: '#6272a4',
-                    callback: function(value) {
-                        return '$' + value.toFixed(2);
-                    }
-                },
-                grid: { color: '#44475a' }
-            },
-            x: {
-                ticks: { color: '#6272a4' },
-                grid: { color: '#44475a' }
-            }
         }
-    };
-
-    if (costChart) {
-        costChart.data = chartData;
-        costChart.options = options;
-        costChart.update();
-    } else {
-        costChart = new Chart(elements.costTrendChart, {
-            type: 'line',
-            data: chartData,
-            options: options
-        });
-    }
+    });
 }
 
 function updateLogLevelChart(levels) {
