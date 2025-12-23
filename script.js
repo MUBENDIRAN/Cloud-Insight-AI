@@ -85,8 +85,17 @@ function displayChanges(changes) {
 }
 
 function updateDashboard(data) {
-    window.dashboardData = data; // <-- ADD THIS LINE (important)
-
+    window.dashboardData = data;
+    
+    // 🔴 ADD DEBUGGING INFO
+    console.log('📊 Dashboard Updated:', {
+        timestamp: data.timestamp,
+        errors: data.error_details?.length || 0,
+        warnings: data.warning_details?.length || 0,
+        costBreakdown: data.cost_breakdown?.length || 0,
+        recommendations: data.recommendations?.length || 0
+    });
+    
     updateTimestamp(data.timestamp);
     updateStatusIndicators(data.cost_health, data.log_levels);
     updateExecutiveSummary(data);
