@@ -1,3 +1,9 @@
+// --- CONFIGURATION ---
+const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
+const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json';
+const REFRESH_INTERVAL_MS = 30000; // 30 seconds
+
+// --- DOM ELEMENT REFERENCES ---
 const elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
     lastUpdated: document.getElementById('last-updated'),
