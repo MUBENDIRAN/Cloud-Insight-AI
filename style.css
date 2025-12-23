@@ -199,16 +199,35 @@ canvas {
     text-align: center;
 }
 
+/* Make clickable badges more obvious */
 .badge {
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: var(--spacing-xs);
-    transition: transform 0.2s ease, color 0.2s ease; /* ADD THIS */
+    transition: transform 0.2s ease, color 0.2s ease;
+    position: relative;
+}
+
+.badge[style*="cursor: pointer"] {
+    cursor: pointer !important;
+}
+
+.badge[style*="cursor: pointer"]::after {
+    content: '👆';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 0.7rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.badge[style*="cursor: pointer"]:hover::after {
+    opacity: 1;
 }
 
 .badge:hover {
-    transform: scale(1.1);
-    opacity: 0.8;
+    transform: scale(1.15);
 }
 
 .badge-critical { color: var(--critical-color); }

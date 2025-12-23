@@ -323,7 +323,10 @@ function updateConfigDisplay(config) {
 }
 
 function updateCostChart(costTrend) {
-    if (!costTrend || !costTrend.history) return;
+    if (!costTrend || !costTrend.history) {
+        console.warn('No cost trend data available');
+        return;
+    }
 
     const labels = costTrend.history.map(item => 
         new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -410,7 +413,10 @@ function updateCostChart(costTrend) {
 }
 
 function updateLogLevelChart(levels) {
-    if (!levels) return;
+    if (!levels) {
+        console.warn('No log level data available');
+        return;
+    }
 
     const data = {
         labels: ['Critical', 'Error', 'Warning', 'Info'],
