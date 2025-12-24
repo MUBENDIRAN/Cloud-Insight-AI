@@ -105,6 +105,7 @@ function updateDashboard(data) {
     updateLogLevelChart(data.log_levels);
     updateRecommendations(data.recommendations);
     updateCostBreakdown(data.cost_breakdown);
+    updateTopErrors(data.error_details); // ✅ ADD THIS
 
     // NEW
     displayChanges(data.changes_since_last);
@@ -229,18 +230,26 @@ function updateLogLevels(levels) {
     elements.warningCount.textContent = warningCount;
     elements.infoCount.textContent = infoCount;
     
-    // 🔴 ADD CLICK HANDLERS FOR INTERACTIVITY
-    elements.errorCount.style.cursor = 'pointer';
-    elements.errorCount.onclick = () => showErrorDetails(errorCount);
+    // ✅ FIX: Don't make critical clickable if count is 0
+    if (criticalCount > 0) {
+        elements.criticalCount.style.cursor = 'pointer';
+        elements.criticalCount.onclick = () => showErrorDetails(criticalCount);
+    }
     
-    elements.warningCount.style.cursor = 'pointer';
-    elements.warningCount.onclick = () => showWarningDetails(warningCount);
+    if (errorCount > 0) {
+        elements.errorCount.style.cursor = 'pointer';
+        elements.errorCount.onclick = () => showErrorDetails(errorCount);
+    }
     
-    elements.criticalCount.style.cursor = 'pointer';
-    elements.criticalCount.onclick = () => showErrorDetails(criticalCount);
-
-    elements.infoCount.style.cursor = 'pointer';
-    elements.infoCount.onclick = () => showInfoDetails(infoCount);
+    if (warningCount > 0) {
+        elements.warningCount.style.cursor = 'pointer';
+        elements.warningCount.onclick = () => showWarningDetails(warningCount);
+    }
+    
+    if (infoCount > 0) {
+        elements.infoCount.style.cursor = 'pointer';
+        elements.infoCount.onclick = () => showInfoDetails(infoCount);
+    }
 }
 
 function showErrorDetails(count) {
@@ -290,6 +299,38 @@ function showWarningDetails(count) {
 
 function showInfoDetails(count) {
     showModal('Info Logs', `<p>${count} informational logs. No action required.</p>`);
+}
+
+function updateTopErrors(errorDetails) {
+    const topErrorsEl = document.getElementById('top-errors-list');
+    
+    if (!errorDetails || errorDetails.length === 0) {
+        topErrorsEl.innerHTML = '<p style="text-align: center; color: var(--success-color);">✅ No errors</p>';
+        return;
+    }
+    
+    // Group by error type
+    const errorGroups = {};
+    errorDetails.forEach(e => {
+        if (!errorGroups[e.type]) {
+            errorGroups[e.type] = { count: 0, first: e };
+        }
+        errorGroups[e.type].count++;
+    });
+    
+    // Sort by count
+    const sorted = Object.entries(errorGroups)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5);
+    
+    const html = sorted.map(([type, data]) => `
+        <div style="padding: 0.75rem; background: var(--bg-secondary); border-left: 3px solid var(--error-color); margin-bottom: 0.5rem; border-radius: 4px; cursor: pointer;" onclick="showErrorDetails(${data.first.count})">
+            <strong>${type}</strong> <span style="color: var(--error-color);">(${data.count}x)</span>
+            <br><small style="color: var(--text-tertiary);">${data.first.message}</small>
+        </div>
+    `).join('');
+    
+    topErrorsEl.innerHTML = html;
 }
 
 function updateRecommendations(newRecommendations) {
