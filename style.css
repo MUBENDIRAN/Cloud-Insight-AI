@@ -37,6 +37,7 @@
 
 html, body {
     height: 100%;
+    overflow: hidden;
 }
 
 body {
@@ -114,17 +115,27 @@ button:hover {
 }
 
 main {
-    flex-grow: 1;
-    padding: var(--spacing-md);
-    overflow: hidden;
+  flex-grow: 1;
+  padding: var(--spacing-md);
+  display: grid;
+  grid-template-rows:
+    120px   /* System Status */
+    180px   /* Automated Insights */
+    1fr     /* Cost + Errors */
+    160px;  /* Action Items */
+  gap: var(--spacing-md);
+  overflow: hidden;
 }
 
-.grid-container-minimal {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto auto auto auto;
-    gap: var(--spacing-md);
-    height: 100%;
+
+
+
+.row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  height: 100%;
+  overflow: hidden;
 }
 
 .card-logs-full {
@@ -739,9 +750,11 @@ input:checked + .slider:before {
 
  }
 
-#ai-analysis-content, #top-errors-list, #recommendation-display {
-    overflow-y: auto;
-    max-height: 150px;
+#ai-analysis-content,
+#top-errors-list,
+#recommendation-display {
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 /* New classes to replace inline styles */
