@@ -1,7 +1,6 @@
-// --- CONFIGURATION ---
 const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
 const CONFIG_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/config.json';
-const REFRESH_INTERVAL_MS = 30000; // 30 seconds
+const REFRESH_INTERVAL_MS = 30000;
 
 // --- DOM ELEMENT REFERENCES ---
 const elements = {
@@ -28,8 +27,8 @@ const elements = {
 };
 
 let autoRefreshInterval;
-let costBreakdownChart = null; // ADD THIS
-let logLevelPieChart;
+let logLevelPieChart = null;
+let costBreakdownChart = null;
 let recommendations = [];
 let currentRecommendationIndex = 0;
 let recommendationInterval;
@@ -353,7 +352,6 @@ function updateCostBreakdown(costBreakdown) {
     
     const canvas = document.getElementById('costBreakdownChart');
     
-    // 🔴 DESTROY OLD CHART FIRST
     if (costBreakdownChart) {
         costBreakdownChart.destroy();
     }
@@ -365,7 +363,6 @@ function updateCostBreakdown(costBreakdown) {
         '#ffb86c', '#ff5555', '#f1fa8c'
     ];
     
-    // 🔴 ASSIGN TO VARIABLE
     costBreakdownChart = new Chart(canvas, {
         type: 'doughnut',
         data: {
