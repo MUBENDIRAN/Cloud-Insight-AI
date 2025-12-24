@@ -127,6 +127,12 @@ main {
   overflow: hidden;
 }
 
+main > section,
+main > .row-two {
+  min-height: 0;
+  overflow: hidden;
+}
+
 
 
 
@@ -202,9 +208,8 @@ main {
     background-color: var(--bg-card);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
+    display: block;
 }
 
 .card h2, .card h3 {
@@ -214,6 +219,8 @@ main {
     color: var(--text-secondary);
     border-bottom: 1px solid var(--border-color);
     padding-bottom: var(--spacing-sm);
+    height: 28px;
+    line-height: 28px;
 }
 
 .card-subtitle {
@@ -226,7 +233,6 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    height: 100%;
 }
 
 .metric {
@@ -244,7 +250,6 @@ main {
 }
 
 .chart-container {
-    flex-grow: 1;
     position: relative;
 }
 
@@ -260,7 +265,6 @@ canvas {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-sm);
-    flex-grow: 1;
 }
 
 .count-item {
@@ -314,7 +318,6 @@ canvas {
 
 .insights-list {
     overflow-y: auto;
-    flex-grow: 1;
 }
 
 .insight {
@@ -362,7 +365,6 @@ canvas {
     align-items: center;
     justify-content: center;
     text-align: center;
-    flex-grow: 1;
     font-size: 0.9rem;
 }
 
@@ -371,7 +373,6 @@ canvas {
     font-size: 0.8rem;
     white-space: pre-wrap;
     overflow-y: auto;
-    flex-grow: 1;
     background-color: var(--bg-primary);
     padding: var(--spacing-sm);
     border-radius: var(--radius-md);
@@ -531,7 +532,6 @@ footer {
 .modal-body {
     padding: 1.5rem;
     overflow-y: auto;
-    flex-grow: 1;
 }
 
 .error-item, .warning-item {
@@ -753,8 +753,8 @@ input:checked + .slider:before {
 #ai-analysis-content,
 #top-errors-list,
 #recommendation-display {
+  height: calc(100% - 32px); /* subtract header space */
   overflow-y: auto;
-  max-height: 100%;
 }
 
 /* New classes to replace inline styles */
