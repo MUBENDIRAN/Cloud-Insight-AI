@@ -49,6 +49,7 @@ function updateDashboard(data) {
     updateLogLevels(data.log_levels);
     updateRecommendations(data.recommendations);
     updateCostBreakdown(data.cost_breakdown);
+    updateAIAnalysis(data.ai_insights);
     updateTopErrors(data.error_details);
 
     if (data.run_mode && elements.lastUpdated) {
@@ -123,21 +124,41 @@ function showErrorDetails(count) {
         return;
     }
     
-    const errors = window.dashboardData.error_details.slice(0, 10);
+    // ✅ FIX: Show ALL errors, not just 10
+    const errors = window.dashboardData.error_details; // Remove .slice(0, 10)
     
-    const html = errors.map(e => `
-        <div class="error-item">
-            <div class="error-item-header">
-                <span class="error-id">🔴 ${e.id}</span>
-                <span class="error-type">${e.type}</span>
+    const html = errors.map(e => {
+        let aiAnalysisHtml = '';
+        if (e.ai_analysis) {
+            aiAnalysisHtml = `
+                <div class="ai-analysis">
+                    <h4>🤖 AI Root Cause Analysis</h4>
+                    <p><strong>Root Cause:</strong> ${e.ai_analysis.root_cause}</p>
+                    <p><strong>Related:</strong> ${e.ai_analysis.related_errors.join(', ')}</p>
+                    <p><strong>Fix Time:</strong> ${e.ai_analysis.estimated_fix_time}</p>
+                    <div class="cli-command">
+                        <code>${e.ai_analysis.fix_command}</code>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="error-item">
+                <div class="error-item-header">
+                    <span class="error-id">🔴 ${e.id}</span>
+                    <span class="error-type">${e.type}</span>
+                </div>
+                <div class="error-message">${e.message}</div>
+                ${e.recommendation ? `<div class="error-recommendation">💡 ${e.recommendation}</div>` : ''}
+                ${e.timestamp ? `<div class="error-timestamp">⏰ ${e.timestamp}</div>` : ''}
+                ${aiAnalysisHtml}
             </div>
-            <div class="error-message">${e.message}</div>
-            ${e.recommendation ? `<div class="error-recommendation">💡 ${e.recommendation}</div>` : ''}
-            ${e.timestamp ? `<div class="error-timestamp">⏰ ${e.timestamp}</div>` : ''}
-        </div>
-    `).join('');
+        `;
+    }).join('');
     
-    showModal(`Error Details (${errors.length} of ${count})`, html);
+    // ✅ FIX: Show correct count
+    showModal(`Error Details (${errors.length} total)`, html);
 }
 
 function showWarningDetails(count) {
@@ -163,7 +184,24 @@ function showWarningDetails(count) {
 }
 
 function showInfoDetails(count) {
-    showModal('Info Logs', `<p>${count} informational logs. No action required.</p>`);
+    if (!window.dashboardData?.info_details) {
+        showModal('Info Logs', `<p>${count} informational logs.</p>`);
+        return;
+    }
+    
+    const infos = window.dashboardData.info_details;
+    
+    const html = infos.map(i => `
+        <div style="background: var(--bg-secondary); border-left: 3px solid var(--success-color); padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                <strong style="color: var(--success-color);">${i.id}</strong>
+                <span style="font-size: 0.75rem; color: var(--text-tertiary);">⏰ ${i.timestamp}</span>
+            </div>
+            <div>${i.message}</div>
+        </div>
+    `).join('');
+    
+    showModal(`Info Logs (${infos.length} total)`, html);
 }
 
 function updateTopErrors(errorDetails) {
@@ -199,6 +237,33 @@ function updateTopErrors(errorDetails) {
     `).join('');
     
     topErrorsEl.innerHTML = html;
+}
+
+function updateAIAnalysis(insights) {
+    const aiEl = document.getElementById('ai-analysis-content');
+    if (!aiEl) return;
+    
+    if (!insights || insights.length === 0) {
+        aiEl.innerHTML = '<p style="text-align: center; padding: 2rem;">✅ No anomalies detected</p>';
+        return;
+    }
+    
+    const html = insights.map(insight => `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <strong style="font-size: 1.1rem;">${insight.title}</strong>
+                <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem;">
+                    ${(insight.confidence * 100).toFixed(0)}% confidence
+                </span>
+            </div>
+            <div style="margin-bottom: 0.5rem; line-height: 1.5;">${insight.finding}</div>
+            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+                <strong>→ Action:</strong> ${insight.action}
+            </div>
+        </div>
+    `).join('');
+    
+    aiEl.innerHTML = html;
 }
 
 function updateRecommendations(newRecommendations) {

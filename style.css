@@ -118,7 +118,7 @@ main {
 .grid-container-minimal {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: auto auto auto auto;
     gap: var(--spacing-md);
     height: 100%;
 }
@@ -128,19 +128,24 @@ main {
     grid-row: 1;
 }
 
+.card-ai-analysis {
+    grid-column: 1 / 3;
+    grid-row: 2;
+}
+
 .card-cost-minimal {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
 }
 
 .card-top-errors {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 3;
 }
 
 .card-recommendations-minimal {
     grid-column: 1 / 3;
-    grid-row: 3;
+    grid-row: 4;
 }
 
 /* Horizontal counts */
@@ -598,13 +603,86 @@ input:checked + .slider:before {
     animation: slideIn 0.3s ease;
 }
 
- @keyframes slideIn {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
+  @keyframes slideIn {
+
+     from {
+
+         transform: translateX(400px);
+
+         opacity: 0;
+
+     }
+
+     to {
+
+         transform: translateX(0);
+
+         opacity: 1;
+
+     }
+
+ }
+
+ 
+
+ .ai-analysis {
+
+     margin-top: 1rem;
+
+     padding: 1rem;
+
+     background: var(--bg-primary);
+
+     border-radius: var(--radius-md);
+
+     border: 1px solid var(--border-color);
+
+ }
+
+ 
+
+ .ai-analysis h4 {
+
+     color: var(--primary-light);
+
+     margin-bottom: 0.75rem;
+
+     font-size: 1rem;
+
+ }
+
+ 
+
+ .ai-analysis p {
+
+     font-size: 0.85rem;
+
+     line-height: 1.6;
+
+     margin-bottom: 0.5rem;
+
+ }
+
+ 
+
+ .cli-command {
+
+     background: #111;
+
+     padding: 0.75rem;
+
+     border-radius: var(--radius-md);
+
+     margin-top: 0.75rem;
+
+     font-family: 'Fira Code', monospace;
+
+     font-size: 0.8rem;
+
+     color: #eee;
+
+     border: 1px solid #333;
+
+ }
+
+ 
