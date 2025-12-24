@@ -57,6 +57,9 @@ class JSONReportGenerator:
         # Cost trend
         cost_trend = self._build_cost_trend(cost_summary)
         
+        # Correctly count log levels
+        critical_count = sum(1 for e in error_details if e.get('severity') == 'critical')
+        
         report = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "run_mode": "Scheduled (ECS + EventBridge)",
@@ -80,8 +83,8 @@ class JSONReportGenerator:
             
             # Log levels
             "log_levels": {
-                "critical": 0,
-                "error": len(error_details),
+                "critical": critical_count,
+                "error": len(error_details) - critical_count,
                 "warning": len(warning_details),
                 "info": log_summary.get('info_count', 0)
             },
@@ -91,6 +94,11 @@ class JSONReportGenerator:
             "warning_details": warning_details,
             "info_details": info_details,  # ✅ ADD THIS
             "cost_breakdown": cost_breakdown,  # Detailed service costs
+            "cost_metadata": {
+                "billing_period": "Jan 2025 (Daily)",
+                "account": "prod-123456789",
+                "region": "ap-south-1"
+            },
             "log_distribution": log_distribution,  # Better chart data
             
             # Trend
@@ -308,7 +316,7 @@ class JSONReportGenerator:
                 })
         
         # Format for display
-        return [f"[{a['priority']}] {a['issue']}\n💻 {a['command']}\n📝 {a['description']}" 
+        return [f"[{a['priority']}] {a['issue']}\n💻 Example remediation command: {a['command']}\n📝 {a['description']}" 
                 for a in sorted(actions, key=lambda x: {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2}[x['priority']])[:8]]
     
     def _calculate_health_score(self, error_rate, error_count, warning_count):

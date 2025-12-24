@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Insight AI - Compact Dashboard</title>
+    <title>Cloud Insight AI </title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,14 +58,15 @@
         </section>
 
         <!-- Add after System Status -->
-        <section class="card card-ai-analysis" style="grid-column: 1 / 3; grid-row: 2;">
-            <h2>🤖 AI Analysis</h2>
+        <section class="card card-ai-analysis">
+            <h2>⚙️ Automated Insights</h2>
             <div id="ai-analysis-content"></div>
         </section>
 
         <!-- Cost Breakdown -->
         <section class="card card-cost-minimal">
             <h2>Cost Breakdown</h2>
+            <div id="cost-breakdown-subtitle" class="card-subtitle"></div>
             <div class="chart-container">
                 <canvas id="costBreakdownChart"></canvas>
             </div>
@@ -87,7 +88,10 @@
 
         <footer>
             <div id="status-indicators"></div>
-            <span id="last-updated" aria-live="polite"></span>
+            <div>
+                <span id="data-freshness" class="freshness-badge"></span>
+                <span id="last-updated" aria-live="polite"></span>
+            </div>
         </footer>
     </div>
 

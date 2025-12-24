@@ -4,6 +4,7 @@ const REFRESH_INTERVAL_MS = 30000;
 const elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
     lastUpdated: document.getElementById('last-updated'),
+    dataFreshness: document.getElementById('data-freshness'),
     refreshBtn: document.getElementById('refresh-btn'),
     downloadReportBtn: document.getElementById('download-report-btn'),
     autoRefreshToggle: document.getElementById('auto-refresh'),
@@ -13,7 +14,13 @@ const elements = {
     warningCount: document.getElementById('warning-count'),
     infoCount: document.getElementById('info-count'),
     recommendationDisplay: document.getElementById('recommendation-display'),
+    costBreakdownSubtitle: document.getElementById('cost-breakdown-subtitle'),
     errorMessage: document.getElementById('error-message'),
+};
+
+const DashboardStore = {
+  data: null,
+  set(data) { this.data = data }
 };
 
 let autoRefreshInterval;
@@ -25,18 +32,20 @@ async function fetchDashboardData() {
         const response = await fetch(S3_REPORT_URL);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        document.querySelector('.dashboard-container').classList.remove('data-stale');
         updateDashboard(data);
         hideError();
     } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
-        showError(`Failed to fetch report data: ${error.message}.`);
+        document.querySelector('.dashboard-container').classList.add('data-stale');
+        showError(`Failed to fetch new data. Displayed data may be outdated.`);
     } finally {
         showLoadingOverlay(false);
     }
 }
 
 function updateDashboard(data) {
-    window.dashboardData = data;
+    DashboardStore.set(data);
     
     console.log('📊 Dashboard Updated:', {
         timestamp: data.timestamp,
@@ -48,7 +57,7 @@ function updateDashboard(data) {
     updateStatusIndicators(data.cost_health, data.log_levels);
     updateLogLevels(data.log_levels);
     updateRecommendations(data.recommendations);
-    updateCostBreakdown(data.cost_breakdown);
+    updateCostBreakdown(data.cost_breakdown, data.cost_metadata);
     updateAIAnalysis(data.ai_insights);
     updateTopErrors(data.error_details);
 
@@ -62,10 +71,27 @@ function updateDashboard(data) {
 function updateTimestamp(timestamp) {
     if (!timestamp) {
         elements.lastUpdated.textContent = 'Last updated: N/A';
+        elements.dataFreshness.style.display = 'none';
         return;
     }
+    
     const date = new Date(timestamp);
     elements.lastUpdated.textContent = `Last updated: ${date.toLocaleTimeString()}`;
+
+    const ageMinutes = (Date.now() - date) / 60000;
+    const freshnessBadge = elements.dataFreshness;
+    
+    if (ageMinutes < 1) {
+        freshnessBadge.textContent = 'Fresh';
+        freshnessBadge.className = 'freshness-badge fresh';
+    } else if (ageMinutes <= 5) {
+        freshnessBadge.textContent = 'Stale';
+        freshnessBadge.className = 'freshness-badge stale';
+    } else {
+        freshnessBadge.textContent = 'Old';
+        freshnessBadge.className = 'freshness-badge old';
+    }
+    freshnessBadge.style.display = 'inline-block';
 }
 
 function updateStatusIndicators(costHealth, logLevels) {
@@ -79,8 +105,11 @@ function updateStatusIndicators(costHealth, logLevels) {
     indicators += `<div class="status-item"><span class="status-dot ${costStatus}"></span>Costs</div>`;
 
     let logStatus = 'green';
-    if (warnings > 0) logStatus = 'yellow';
-    if (criticals > 0) logStatus = 'red';
+    if (criticals > 0) {
+        logStatus = 'red';
+    } else if (warnings > 0) {
+        logStatus = 'yellow';
+    }
     indicators += `<div class="status-item"><span class="status-dot ${logStatus}"></span>Logs</div>`;
 
     elements.statusIndicators.innerHTML = indicators;
@@ -92,47 +121,49 @@ function updateLogLevels(levels) {
     const warningCount = levels?.warning || 0;
     const infoCount = levels?.info || 0;
     
-    elements.criticalCount.textContent = criticalCount;
-    elements.errorCount.textContent = errorCount;
-    elements.warningCount.textContent = warningCount;
-    elements.infoCount.textContent = infoCount;
-    
-    if (criticalCount > 0) {
-        elements.criticalCount.style.cursor = 'pointer';
-        elements.criticalCount.onclick = () => showErrorDetails(criticalCount);
-    }
-    
-    if (errorCount > 0) {
-        elements.errorCount.style.cursor = 'pointer';
-        elements.errorCount.onclick = () => showErrorDetails(errorCount);
-    }
-    
-    if (warningCount > 0) {
-        elements.warningCount.style.cursor = 'pointer';
-        elements.warningCount.onclick = () => showWarningDetails(warningCount);
-    }
-    
-    if (infoCount > 0) {
-        elements.infoCount.style.cursor = 'pointer';
-        elements.infoCount.onclick = () => showInfoDetails(infoCount);
-    }
+    const setupLogLevel = (element, count, handler) => {
+        element.textContent = count;
+        if (count > 0) {
+            element.style.cursor = 'pointer';
+            element.onclick = handler;
+        } else {
+            element.style.cursor = 'default';
+            element.onclick = null;
+        }
+    };
+
+    setupLogLevel(elements.criticalCount, criticalCount, () => showErrorDetails('critical'));
+    setupLogLevel(elements.errorCount, errorCount, () => showErrorDetails('error'));
+    setupLogLevel(elements.warningCount, warningCount, () => showWarningDetails('warning'));
+    setupLogLevel(elements.infoCount, infoCount, () => showInfoDetails(infoCount));
 }
 
-function showErrorDetails(count) {
-    if (!window.dashboardData?.error_details) {
-        showModal('Error Details', `<p>${count} errors detected.</p>`);
+function showErrorDetails(filter) {
+    if (!DashboardStore.data?.error_details) {
+        showModal('Error Details', `<p>No error details available.</p>`);
         return;
     }
     
-    // ✅ FIX: Show ALL errors, not just 10
-    const errors = window.dashboardData.error_details; // Remove .slice(0, 10)
+    let errors = DashboardStore.data.error_details;
+    let title = 'Error Details';
+
+    if (filter === 'critical') {
+        errors = errors.filter(e => e.severity === 'critical');
+        title = 'Critical Error Details';
+    } else if (filter === 'error') {
+        errors = errors.filter(e => e.severity !== 'critical');
+        title = 'Non-Critical Error Details';
+    } else if (filter) {
+        errors = errors.filter(e => e.type === filter);
+        title = `${filter} Details`;
+    }
     
     const html = errors.map(e => {
         let aiAnalysisHtml = '';
         if (e.ai_analysis) {
             aiAnalysisHtml = `
                 <div class="ai-analysis">
-                    <h4>🤖 AI Root Cause Analysis</h4>
+                    <h4>⚙️ Heuristic Root Cause Analysis</h4>
                     <p><strong>Root Cause:</strong> ${e.ai_analysis.root_cause}</p>
                     <p><strong>Related:</strong> ${e.ai_analysis.related_errors.join(', ')}</p>
                     <p><strong>Fix Time:</strong> ${e.ai_analysis.estimated_fix_time}</p>
@@ -146,8 +177,11 @@ function showErrorDetails(count) {
         return `
             <div class="error-item">
                 <div class="error-item-header">
-                    <span class="error-id">🔴 ${e.id}</span>
-                    <span class="error-type">${e.type}</span>
+                    <div>
+                        <span class="error-id">🔴 ${e.id}</span>
+                        <span class="error-type">${e.type}</span>
+                    </div>
+                    <span class="severity-badge severity-${e.severity}">${e.severity}</span>
                 </div>
                 <div class="error-message">${e.message}</div>
                 ${e.recommendation ? `<div class="error-recommendation">💡 ${e.recommendation}</div>` : ''}
@@ -157,17 +191,16 @@ function showErrorDetails(count) {
         `;
     }).join('');
     
-    // ✅ FIX: Show correct count
-    showModal(`Error Details (${errors.length} total)`, html);
+    showModal(`${title} (${errors.length} total)`, html);
 }
 
-function showWarningDetails(count) {
-    if (!window.dashboardData?.warning_details) {
-        showModal('Warning Details', `<p>${count} warnings detected.</p>`);
+function showWarningDetails(severity) {
+    if (!DashboardStore.data?.warning_details) {
+        showModal('Warning Details', `<p>No warning details available.</p>`);
         return;
     }
     
-    const warnings = window.dashboardData.warning_details.slice(0, 10);
+    const warnings = DashboardStore.data.warning_details.filter(w => w.severity === severity);
     
     const html = warnings.map(w => `
         <div class="warning-item">
@@ -180,22 +213,22 @@ function showWarningDetails(count) {
         </div>
     `).join('');
     
-    showModal(`Warning Details (${warnings.length} of ${count})`, html);
+    showModal(`Warning Details (${warnings.length} total)`, html);
 }
 
 function showInfoDetails(count) {
-    if (!window.dashboardData?.info_details) {
+    if (!DashboardStore.data?.info_details) {
         showModal('Info Logs', `<p>${count} informational logs.</p>`);
         return;
     }
     
-    const infos = window.dashboardData.info_details;
+    const infos = DashboardStore.data.info_details;
     
     const html = infos.map(i => `
-        <div style="background: var(--bg-secondary); border-left: 3px solid var(--success-color); padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 4px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-                <strong style="color: var(--success-color);">${i.id}</strong>
-                <span style="font-size: 0.75rem; color: var(--text-tertiary);">⏰ ${i.timestamp}</span>
+        <div class="info-item">
+            <div class="info-item-header">
+                <strong class="info-item-id">${i.id}</strong>
+                <span class="info-item-timestamp">⏰ ${i.timestamp}</span>
             </div>
             <div>${i.message}</div>
         </div>
@@ -230,7 +263,7 @@ function updateTopErrors(errorDetails) {
         .slice(0, 5);
     
     const html = sorted.map(([type, data]) => `
-        <div style="padding: 0.75rem; background: var(--bg-secondary); border-left: 3px solid var(--error-color); margin-bottom: 0.5rem; border-radius: 4px; cursor: pointer;" onclick="showErrorDetails(${data.count})">
+        <div class="error-summary-item" onclick="showErrorDetails('${type}')">
             <strong>${type}</strong> <span style="color: var(--error-color);">(${data.count}x)</span>
             <br><small style="color: var(--text-tertiary);">${data.first.message.substring(0, 60)}...</small>
         </div>
@@ -244,20 +277,26 @@ function updateAIAnalysis(insights) {
     if (!aiEl) return;
     
     if (!insights || insights.length === 0) {
-        aiEl.innerHTML = '<p style="text-align: center; padding: 2rem;">✅ No anomalies detected</p>';
+        aiEl.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2rem;">✅</div>
+                <h4 style="margin-top: 0.5rem; color: var(--success-color);">No Anomalies Detected</h4>
+                <p style="color: var(--text-tertiary); font-size: 0.9rem;">Automated analysis found no unusual patterns.</p>
+            </div>
+        `;
         return;
     }
     
     const html = insights.map(insight => `
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; color: white;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <strong style="font-size: 1.1rem;">${insight.title}</strong>
-                <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem;">
+        <div class="insight-card">
+            <div class="insight-card-header">
+                <strong class="insight-card-title">${insight.title}</strong>
+                <span class="insight-card-confidence">
                     ${(insight.confidence * 100).toFixed(0)}% confidence
                 </span>
             </div>
-            <div style="margin-bottom: 0.5rem; line-height: 1.5;">${insight.finding}</div>
-            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+            <div class="insight-card-finding">${insight.finding}</div>
+            <div class="insight-card-action">
                 <strong>→ Action:</strong> ${insight.action}
             </div>
         </div>
@@ -270,23 +309,38 @@ function updateRecommendations(newRecommendations) {
     if (!elements.recommendationDisplay) return;
     
     if (!newRecommendations || newRecommendations.length === 0) {
-        elements.recommendationDisplay.innerHTML = '<p style="text-align: center; padding: 2rem;">✅ All systems optimal</p>';
+        elements.recommendationDisplay.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 2rem;">👍</div>
+                <h4 style="margin-top: 0.5rem; color: var(--success-color);">All Systems Optimal</h4>
+                <p style="color: var(--text-tertiary); font-size: 0.9rem;">No actionable recommendations at this time.</p>
+            </div>
+        `;
         return;
     }
     
     const html = newRecommendations.map((rec, i) => 
-        `<div style="text-align: left; padding: 0.5rem; border-left: 3px solid var(--primary-color); margin: 0.5rem 0; background: var(--bg-secondary); border-radius: 4px; font-size: 0.85rem;">
+        `<div class="recommendation-item">
             <strong>${i + 1}.</strong> ${rec}
         </div>`
     ).join('');
     
-    elements.recommendationDisplay.innerHTML = html;
+    elements.recommendationDisplay.innerHTML = html + `
+        <p class="disclaimer">
+            <strong>Disclaimer:</strong> Commands shown for guidance, not auto-execution.
+        </p>
+    `;
     elements.recommendationDisplay.style.textAlign = 'left';
     elements.recommendationDisplay.style.overflowY = 'auto';
     elements.recommendationDisplay.style.maxHeight = '100%';
 }
 
-function updateCostBreakdown(costBreakdown) {
+function updateCostBreakdown(costBreakdown, costMetadata) {
+    if (elements.costBreakdownSubtitle && costMetadata) {
+        elements.costBreakdownSubtitle.textContent = 
+            `Billing Period: ${costMetadata.billing_period} | Account: ${costMetadata.account} (${costMetadata.region})`;
+    }
+
     if (!costBreakdown || costBreakdown.length === 0) return;
     
     const canvas = document.getElementById('costBreakdownChart');
@@ -356,12 +410,20 @@ function showLoadingOverlay(show) {
 function initialize() {
     elements.refreshBtn.addEventListener('click', fetchDashboardData);
     elements.downloadReportBtn.addEventListener('click', downloadReport);
+
+    const autoRefreshEnabled = localStorage.getItem('autoRefresh') !== 'false';
+    elements.autoRefreshToggle.checked = autoRefreshEnabled;
+    if (autoRefreshEnabled) {
+        startAutoRefresh();
+    }
+
     elements.autoRefreshToggle.addEventListener('change', (e) => {
-        e.target.checked ? startAutoRefresh() : stopAutoRefresh();
+        const isChecked = e.target.checked;
+        localStorage.setItem('autoRefresh', isChecked);
+        isChecked ? startAutoRefresh() : stopAutoRefresh();
     });
 
     fetchDashboardData();
-    startAutoRefresh();
 }
 
 function startAutoRefresh() {
