@@ -33,61 +33,65 @@
         </header>
 
         <main>
-            <section class="card card-logs-full">
-                <h2>System Status</h2>
+    <div class="grid-container-minimal">
+        <!-- System Status -->
+        <section class="card card-logs-full">
+            <h2>System Status</h2>
+            <div class="card-body">
+                <div class="counts-grid-horizontal">
+                    <div class="count-item-large">
+                        <span id="critical-count" class="badge badge-critical">0</span>
+                        <label>Critical</label>
+                    </div>
+                    <div class="count-item-large">
+                        <span id="error-count" class="badge badge-error">0</span>
+                        <label>Errors</label>
+                    </div>
+                    <div class="count-item-large">
+                        <span id="warning-count" class="badge badge-warning">0</span>
+                        <label>Warnings</label>
+                    </div>
+                    <div class="count-item-large">
+                        <span id="info-count" class="badge badge-info">0</span>
+                        <label>Info</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Analysis -->
+        <section class="card card-ai-analysis">
+            <h2>⚙️ Automated Insights</h2>
+            <div class="card-body" id="ai-analysis-content"></div>
+        </section>
+
+        <!-- Middle Row Container -->
+        <div class="middle-row">
+            <!-- Cost Breakdown -->
+            <section class="card card-cost-minimal">
+                <h2>Cost Breakdown</h2>
                 <div class="card-body">
-                    <div class="counts-grid-horizontal">
-                        <div class="count-item-large">
-                            <span id="critical-count" class="badge badge-critical">0</span>
-                            <label>Critical</label>
-                        </div>
-                        <div class="count-item-large">
-                            <span id="error-count" class="badge badge-error">0</span>
-                            <label>Errors</label>
-                        </div>
-                        <div class="count-item-large">
-                            <span id="warning-count" class="badge badge-warning">0</span>
-                            <label>Warnings</label>
-                        </div>
-                        <div class="count-item-large">
-                            <span id="info-count" class="badge badge-info">0</span>
-                            <label>Info</label>
-                        </div>
+                    <div id="cost-breakdown-subtitle" class="card-subtitle"></div>
+                    <div class="chart-container">
+                        <canvas id="costBreakdownChart"></canvas>
                     </div>
                 </div>
             </section>
 
-            <!-- Add after System Status -->
-            <section class="card card-ai-analysis">
-                <h2>⚙️ Automated Insights</h2>
-                <div class="card-body" id="ai-analysis-content"></div>
+            <!-- Top Errors -->
+            <section class="card card-top-errors">
+                <h2>Recent Errors</h2>
+                <div class="card-body" id="top-errors-list"></div>
             </section>
+        </div>
 
-            <div class="middle-row">
-                <!-- Cost Breakdown -->
-                <section class="card card-cost-minimal">
-                    <h2>Cost Breakdown</h2>
-                    <div class="card-body">
-                        <div id="cost-breakdown-subtitle" class="card-subtitle"></div>
-                        <div class="chart-container">
-                            <canvas id="costBreakdownChart"></canvas>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Top Errors - NEW! -->
-                <section class="card card-top-errors">
-                    <h2>Recent Errors</h2>
-                    <div class="card-body" id="top-errors-list"></div>
-                </section>
-            </div>
-
-            <!-- Recommendations -->
-            <section class="card card-recommendations-minimal">
-                <h2>Action Items</h2>
-                <div class="card-body" id="recommendation-display"></div>
-            </section>
-        </main>
+        <!-- Recommendations -->
+        <section class="card card-recommendations-minimal">
+            <h2>Action Items</h2>
+            <div class="card-body" id="recommendation-display"></div>
+        </section>
+    </div>
+</main>
 
         <footer>
             <div id="status-indicators"></div>
