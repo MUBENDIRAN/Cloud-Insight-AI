@@ -1,6 +1,11 @@
-![Cloud Icon](cloud.png)
+<p>
+  <img src="cloud.png" alt="Cloud Insight AI Logo" width="80" align="left">
+</p>
 
 # Cloud Insight AI
+>
+
+
 
 Cloud Insight AI is a containerized cloud monitoring and analysis tool that processes cost and log data, generates AI-assisted insights, and visualizes the results on a web dashboard.
 
@@ -59,35 +64,35 @@ A static dashboard fetches `final_report.json` from S3 and renders interactive v
 
 ## Project Structure
 
-.
-├── README.md
-├── _push.sh
-├── architechture.png
-├── cloud.png
-├── config.json
-├── config.yaml
-├── data
-│   ├── cost.json
-│   ├── logs.txt
-│   ├── performance-logs.txt
-│   └── security-logs.txt
-├── docker
-│   └── Dockerfile
-├── final_report.json
-├── index.html
-├── package-lock.json
-├── requirements.txt
-├── script.js
-├── src
-│   ├── analyzer.py
-│   ├── comprehend_client.py
-│   ├── config_loader.py
-│   ├── cost_processor.py
-│   ├── json_report_generator.py
-│   ├── log_processor.py
-│   └── notification_handler.py
-└── style.css
-
+```
+  ├── README.md
+  ├── _push.sh
+  ├── architechture.png
+  ├── cloud.png
+  ├── config.json
+  ├── config.yaml
+  ├── data
+  │   ├── cost.json
+  │   ├── logs.txt
+  │   ├── performance-logs.txt
+  │   └── security-logs.txt
+  ├── docker
+  │   └── Dockerfile
+  ├── final_report.json
+  ├── index.html
+  ├── package-lock.json
+  ├── requirements.txt
+  ├── script.js
+  ├── src
+  │   ├── analyzer.py
+  │   ├── comprehend_client.py
+  │   ├── config_loader.py
+  │   ├── cost_processor.py
+  │   ├── json_report_generator.py
+  │   ├── log_processor.py
+  │   └── notification_handler.py
+  └── style.css
+```
 
 ---
 
