@@ -1,3 +1,5 @@
+![Cloud Icon](cloud.png)
+
 # Cloud Insight AI
 
 A real-time, compact, and interactive cloud infrastructure monitoring dashboard.
