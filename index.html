@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Insight AI - Enhanced Dashboard</title>
+    <title>Cloud Insight AI - Real Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #1e1e2e 0%, #2d2f41 100%);
             color: #f8f8f2;
             overflow-x: hidden;
@@ -130,10 +130,6 @@
             grid-column: span 2;
         }
 
-        .card.span-3 {
-            grid-column: span 3;
-        }
-
         .card.span-4 {
             grid-column: span 4;
         }
@@ -176,14 +172,14 @@
             letter-spacing: 1px;
         }
 
-        .critical { color: #ef4444; }
-        .error { color: #f59e0b; }
+        .critical { color: #991b1b; }
+        .error { color: #ef4444; }
         .warning { color: #fbbf24; }
         .info { color: #3b82f6; }
 
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 280px;
             margin-top: 20px;
         }
 
@@ -205,12 +201,31 @@
             font-weight: 600;
             margin-bottom: 8px;
             color: #bd93f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .confidence-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
         }
 
         .insight-text {
             font-size: 14px;
             line-height: 1.6;
             color: #f8f8f2;
+            margin-bottom: 8px;
+        }
+
+        .insight-action {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 8px;
         }
 
         .recommendation-item {
@@ -220,6 +235,7 @@
             margin-bottom: 12px;
             border-left: 3px solid #10b981;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .recommendation-item:hover {
@@ -227,31 +243,249 @@
             transform: translateX(5px);
         }
 
-        .error-item {
-            background: rgba(239, 68, 68, 0.1);
+        .cost-item {
+            background: rgba(245, 158, 11, 0.1);
             padding: 16px;
             border-radius: 8px;
             margin-bottom: 12px;
-            border-left: 3px solid #ef4444;
+            border-left: 3px solid #f59e0b;
             cursor: pointer;
             transition: all 0.3s;
         }
 
-        .error-item:hover {
-            background: rgba(239, 68, 68, 0.2);
+        .cost-item:hover {
+            background: rgba(245, 158, 11, 0.2);
             transform: translateX(5px);
         }
 
-        .loading {
+        .cost-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .service-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #bd93f9;
+        }
+
+        .cost-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        .cost-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #6272a4;
+        }
+
+        .trend-up {
+            color: #ef4444;
+        }
+
+        .trend-down {
+            color: #10b981;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
-            height: 100px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2d2f41;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 24px 30px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: #2d2f41;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #6272a4;
+            font-size: 32px;
+            cursor: pointer;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .error-detail {
+            background: rgba(239, 68, 68, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .error-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .error-id {
+            font-weight: 700;
+            color: #ef4444;
+            font-size: 16px;
+        }
+
+        .severity-badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: #991b1b;
+            color: white;
+        }
+
+        .severity-high {
+            background: #ef4444;
+            color: white;
+        }
+
+        .severity-medium {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .error-type {
+            color: #bd93f9;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 12px 0;
+            color: #f8f8f2;
+        }
+
+        .error-recommendation {
+            background: rgba(16, 185, 129, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            border-left: 3px solid #10b981;
+        }
+
+        .ai-analysis {
+            background: rgba(102, 126, 234, 0.15);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .ai-analysis-title {
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .fix-command {
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6272a4;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading.show {
+            display: flex;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border: 4px solid rgba(102, 126, 234, 0.3);
             border-top-color: #667eea;
             border-radius: 50%;
@@ -262,36 +496,11 @@
             to { transform: rotate(360deg); }
         }
 
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .metric-label {
-            color: #bd93f9;
-            font-size: 14px;
-        }
-
-        .metric-value {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #6272a4;
-            font-size: 14px;
-        }
-
         @media (max-width: 1200px) {
             .grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            .card.span-3 {
+            .card.span-4 {
                 grid-column: span 2;
             }
         }
@@ -300,13 +509,17 @@
             .grid {
                 grid-template-columns: 1fr;
             }
-            .card.span-2, .card.span-3, .card.span-4 {
+            .card.span-2, .card.span-4 {
                 grid-column: span 1;
             }
         }
     </style>
 </head>
 <body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
     <div class="dashboard">
         <header>
             <h1>☁️ Cloud Insight AI</h1>
@@ -321,22 +534,22 @@
 
         <div class="grid">
             <!-- Status Cards -->
-            <div class="card stat-card" onclick="showDetails('critical')">
+            <div class="card stat-card" onclick="showErrorModal('critical')">
                 <div class="stat-label">Critical</div>
                 <div class="stat-value critical" id="critical-count">0</div>
             </div>
 
-            <div class="card stat-card" onclick="showDetails('error')">
+            <div class="card stat-card" onclick="showErrorModal('error')">
                 <div class="stat-label">Errors</div>
                 <div class="stat-value error" id="error-count">0</div>
             </div>
 
-            <div class="card stat-card" onclick="showDetails('warning')">
+            <div class="card stat-card" onclick="showErrorModal('warning')">
                 <div class="stat-label">Warnings</div>
                 <div class="stat-value warning" id="warning-count">0</div>
             </div>
 
-            <div class="card stat-card" onclick="showDetails('info')">
+            <div class="card stat-card" onclick="showErrorModal('info')">
                 <div class="stat-label">Info</div>
                 <div class="stat-value info" id="info-count">0</div>
             </div>
@@ -344,7 +557,7 @@
             <!-- Cost Trend Chart -->
             <div class="card span-2">
                 <div class="card-header">
-                    <div class="card-title">📊 Cost Trends (Last 7 Days)</div>
+                    <div class="card-title">📊 Cost Trends (5 Days)</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="costTrendChart"></canvas>
@@ -361,59 +574,24 @@
                 </div>
             </div>
 
-            <!-- Service Cost Breakdown -->
-            <div class="card span-2">
-                <div class="card-header">
-                    <div class="card-title">💰 Service Cost Breakdown</div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="serviceCostChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Performance Metrics -->
-            <div class="card span-2">
-                <div class="card-header">
-                    <div class="card-title">⚡ Performance Metrics</div>
-                </div>
-                <div id="performance-metrics">
-                    <div class="metric-row">
-                        <span class="metric-label">Avg Response Time</span>
-                        <span class="metric-value">245ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Success Rate</span>
-                        <span class="metric-value">99.7%</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Total Requests</span>
-                        <span class="metric-value">1.2M</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Active Instances</span>
-                        <span class="metric-value">24</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- AI Insights -->
-            <div class="card span-3">
+            <div class="card span-4">
                 <div class="card-header">
                     <div class="card-title">🤖 AI-Powered Insights</div>
                 </div>
                 <div id="ai-insights"></div>
             </div>
 
-            <!-- Recent Errors -->
-            <div class="card">
+            <!-- AWS Cost Breakdown -->
+            <div class="card span-2">
                 <div class="card-header">
-                    <div class="card-title">🔴 Recent Errors</div>
+                    <div class="card-title">💰 AWS Cost Breakdown</div>
                 </div>
-                <div id="recent-errors"></div>
+                <div id="cost-breakdown"></div>
             </div>
 
             <!-- Action Items -->
-            <div class="card span-4">
+            <div class="card span-2">
                 <div class="card-header">
                     <div class="card-title">✅ Recommended Actions</div>
                 </div>
@@ -422,61 +600,37 @@
         </div>
 
         <footer>
-            Last updated: <span id="last-update">Just now</span> | Auto-refresh: ON
+            Last updated: <span id="last-update">Loading...</span>
         </footer>
     </div>
 
+    <!-- Modals -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="errorModalTitle">Error Details</h2>
+                <button class="close-btn" onclick="closeModal('errorModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="errorModalBody"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="costModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="costModalTitle">Cost Analysis</h2>
+                <button class="close-btn" onclick="closeModal('costModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="costModalBody"></div>
+        </div>
+    </div>
+
     <script>
+        const S3_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
+        let dashboardData = null;
         let charts = {};
 
-        // Mock data generation
-        function generateMockData() {
-            return {
-                log_levels: {
-                    critical: Math.floor(Math.random() * 5),
-                    error: Math.floor(Math.random() * 20),
-                    warning: Math.floor(Math.random() * 50),
-                    info: Math.floor(Math.random() * 200)
-                },
-                cost_trend: Array.from({length: 7}, (_, i) => ({
-                    day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
-                    cost: Math.random() * 500 + 200
-                })),
-                service_costs: [
-                    { service: 'EC2', cost: Math.random() * 1000 + 500 },
-                    { service: 'S3', cost: Math.random() * 300 + 100 },
-                    { service: 'RDS', cost: Math.random() * 600 + 200 },
-                    { service: 'Lambda', cost: Math.random() * 200 + 50 },
-                    { service: 'CloudFront', cost: Math.random() * 150 + 50 }
-                ],
-                ai_insights: [
-                    {
-                        title: 'Unusual Traffic Pattern Detected',
-                        finding: 'Traffic increased by 45% in the last 2 hours. This may indicate a potential DDoS attack or unexpected viral content.',
-                        confidence: 0.87
-                    },
-                    {
-                        title: 'Cost Optimization Opportunity',
-                        finding: 'Identified 12 idle EC2 instances running for over 72 hours. Estimated monthly savings: $342.',
-                        confidence: 0.95
-                    }
-                ],
-                recent_errors: [
-                    { id: 'ERR-001', message: 'Database connection timeout', severity: 'high', count: 5 },
-                    { id: 'ERR-002', message: 'API rate limit exceeded', severity: 'medium', count: 3 },
-                    { id: 'ERR-003', message: 'Memory allocation failed', severity: 'critical', count: 2 }
-                ],
-                recommendations: [
-                    'Scale down 12 idle EC2 instances to save $342/month',
-                    'Enable CloudWatch alarms for database connection timeouts',
-                    'Implement rate limiting for API endpoints',
-                    'Review and optimize Lambda function memory allocation'
-                ]
-            };
-        }
-
         function initCharts() {
-            // Cost Trend Chart
             const costCtx = document.getElementById('costTrendChart').getContext('2d');
             charts.costTrend = new Chart(costCtx, {
                 type: 'line',
@@ -502,9 +656,7 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
+                            padding: 12
                         }
                     },
                     scales: {
@@ -521,67 +673,21 @@
                 }
             });
 
-            // Log Distribution Chart
             const logCtx = document.getElementById('logDistributionChart').getContext('2d');
             charts.logDistribution = new Chart(logCtx, {
-                type: 'bar',
+                type: 'doughnut',
                 data: {
                     labels: ['Critical', 'Error', 'Warning', 'Info'],
                     datasets: [{
-                        label: 'Count',
                         data: [0, 0, 0, 0],
                         backgroundColor: [
+                            'rgba(153, 27, 27, 0.8)',
                             'rgba(239, 68, 68, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
                             'rgba(251, 191, 36, 0.8)',
                             'rgba(59, 130, 246, 0.8)'
                         ],
-                        borderColor: [
-                            '#ef4444',
-                            '#f59e0b',
-                            '#fbbf24',
-                            '#3b82f6'
-                        ],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            ticks: { color: '#bd93f9' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#bd93f9' }
-                        }
-                    }
-                }
-            });
-
-            // Service Cost Chart
-            const serviceCtx = document.getElementById('serviceCostChart').getContext('2d');
-            charts.serviceCost = new Chart(serviceCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        data: [],
-                        backgroundColor: [
-                            '#667eea',
-                            '#764ba2',
-                            '#f093fb',
-                            '#4facfe',
-                            '#43e97b'
-                        ],
-                        borderWidth: 3,
-                        borderColor: '#2d2f41'
+                        borderColor: '#2d2f41',
+                        borderWidth: 3
                     }]
                 },
                 options: {
@@ -595,30 +701,39 @@
                                 padding: 15,
                                 font: { size: 12 }
                             }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.label + ': $' + context.parsed.toFixed(2);
-                                }
-                            }
                         }
                     }
                 }
             });
         }
 
+        async function fetchData() {
+            try {
+                const response = await fetch(S3_URL);
+                const data = await response.json();
+                dashboardData = data;
+                return data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
+        }
+
         function updateDashboard(data) {
-            // Update stat cards with animation
             document.getElementById('critical-count').textContent = data.log_levels.critical;
             document.getElementById('error-count').textContent = data.log_levels.error;
             document.getElementById('warning-count').textContent = data.log_levels.warning;
             document.getElementById('info-count').textContent = data.log_levels.info;
 
             // Update cost trend chart
-            charts.costTrend.data.labels = data.cost_trend.map(d => d.day);
-            charts.costTrend.data.datasets[0].data = data.cost_trend.map(d => d.cost);
-            charts.costTrend.update('active');
+            if (data.cost_trend && data.cost_trend.history) {
+                const dates = data.cost_trend.history.map(h => new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                const costs = data.cost_trend.history.map(h => h.cost);
+                
+                charts.costTrend.data.labels = dates;
+                charts.costTrend.data.datasets[0].data = costs;
+                charts.costTrend.update('active');
+            }
 
             // Update log distribution chart
             charts.logDistribution.data.datasets[0].data = [
@@ -629,58 +744,191 @@
             ];
             charts.logDistribution.update('active');
 
-            // Update service cost chart
-            charts.serviceCost.data.labels = data.service_costs.map(s => s.service);
-            charts.serviceCost.data.datasets[0].data = data.service_costs.map(s => s.cost);
-            charts.serviceCost.update('active');
-
             // Update AI insights
             const insightsHtml = data.ai_insights.map(insight => `
                 <div class="insight-card">
-                    <div class="insight-title">${insight.title} (${(insight.confidence * 100).toFixed(0)}% confidence)</div>
+                    <div class="insight-title">
+                        ${insight.title}
+                        <span class="confidence-badge">${(insight.confidence * 100).toFixed(0)}% confidence</span>
+                    </div>
                     <div class="insight-text">${insight.finding}</div>
+                    <div class="insight-action"><strong>→ Action:</strong> ${insight.action}</div>
                 </div>
             `).join('');
             document.getElementById('ai-insights').innerHTML = insightsHtml || '<p style="text-align: center; color: #10b981;">✅ No anomalies detected</p>';
 
-            // Update recent errors
-            const errorsHtml = data.recent_errors.map(error => `
-                <div class="error-item">
-                    <strong>${error.id}</strong> (${error.count}x)
-                    <div style="font-size: 13px; margin-top: 4px; color: #f8f8f2;">${error.message}</div>
+            // Update cost breakdown
+            const costHtml = data.cost_breakdown.map(item => `
+                <div class="cost-item" onclick="showCostModal('${item.service}', ${item.cost}, '${item.recommendation}', ${item.change_percent})">
+                    <div class="cost-header">
+                        <span class="service-name">${item.service}</span>
+                        <span class="cost-value">$${item.cost.toFixed(2)}</span>
+                    </div>
+                    <div class="cost-details">
+                        <span>${item.percentage}% of total</span>
+                        <span class="trend-${item.trend}">${item.trend === 'up' ? '↑' : '↓'} ${item.change_percent}%</span>
+                    </div>
                 </div>
             `).join('');
-            document.getElementById('recent-errors').innerHTML = errorsHtml || '<p style="text-align: center; color: #10b981;">✅ No errors</p>';
+            document.getElementById('cost-breakdown').innerHTML = costHtml;
 
             // Update recommendations
-            const recsHtml = data.recommendations.map((rec, i) => `
-                <div class="recommendation-item">
-                    <strong>${i + 1}.</strong> ${rec}
-                </div>
-            `).join('');
+            const recsHtml = data.recommendations.map((rec, i) => {
+                const lines = rec.split('\n');
+                return `
+                    <div class="recommendation-item">
+                        <strong>${i + 1}.</strong> ${lines[0]}<br>
+                        <small style="color: #6272a4; margin-left: 20px;">${lines.slice(1).join(' ')}</small>
+                    </div>
+                `;
+            }).join('');
             document.getElementById('recommendations').innerHTML = recsHtml;
 
-            // Update timestamp
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+            document.getElementById('last-update').textContent = new Date(data.timestamp).toLocaleString();
         }
 
-        function refreshData() {
+        function showErrorModal(type) {
+            if (!dashboardData) return;
+
+            let errors = [];
+            let title = 'Error Details';
+
+            if (type === 'critical') {
+                errors = dashboardData.error_details.filter(e => e.severity === 'critical');
+                title = 'Critical Errors';
+            } else if (type === 'error') {
+                errors = dashboardData.error_details.filter(e => e.severity === 'high' || e.severity === 'medium');
+                title = 'Error Details';
+            } else if (type === 'warning') {
+                errors = dashboardData.warning_details || [];
+                title = 'Warning Details';
+            } else if (type === 'info') {
+                errors = dashboardData.info_details || [];
+                title = 'Information Logs';
+            }
+
+            const modalBody = errors.map(err => `
+                <div class="error-detail">
+                    <div class="error-header">
+                        <span class="error-id">${err.id}</span>
+                        ${err.severity ? `<span class="severity-badge severity-${err.severity}">${err.severity}</span>` : ''}
+                    </div>
+                    ${err.type ? `<div class="error-type">Type: ${err.type}</div>` : ''}
+                    <div class="error-message">${err.message}</div>
+                    ${err.recommendation ? `
+                        <div class="error-recommendation">
+                            <strong>💡 Recommendation:</strong><br>
+                            ${err.recommendation}
+                        </div>
+                    ` : ''}
+                    ${err.ai_analysis ? `
+                        <div class="ai-analysis">
+                            <div class="ai-analysis-title">🤖 AI Root Cause Analysis</div>
+                            <p><strong>Root Cause:</strong> ${err.ai_analysis.root_cause}</p>
+                            <p><strong>Related Errors:</strong> ${err.ai_analysis.related_errors.join(', ')}</p>
+                            <p><strong>Estimated Fix Time:</strong> ${err.ai_analysis.estimated_fix_time}</p>
+                            <div class="fix-command">${err.ai_analysis.fix_command}</div>
+                        </div>
+                    ` : ''}
+                    ${err.timestamp ? `<div style="font-size: 12px; color: #6272a4; margin-top: 8px;">⏰ ${err.timestamp}</div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('errorModalTitle').textContent = `${title} (${errors.length})`;
+            document.getElementById('errorModalBody').innerHTML = modalBody || '<p>No entries found.</p>';
+            document.getElementById('errorModal').classList.add('show');
+        }
+
+        function showCostModal(service, cost, recommendation, changePercent) {
+            const modalBody = `
+                <div class="error-detail" style="border-left-color: #f59e0b;">
+                    <h3 style="color: #f59e0b; margin-bottom: 16px;">${service} Cost Analysis</h3>
+                    
+                    <div style="background: rgba(245, 158, 11, 0.15); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <div style="font-size: 32px; font-weight: 700; color: #f59e0b; margin-bottom: 8px;">$${cost.toFixed(2)}</div>
+                        <div style="font-size: 14px; color: #6272a4;">Current Monthly Cost</div>
+                        <div style="margin-top: 8px; color: ${changePercent > 0 ? '#ef4444' : '#10b981'};">
+                            ${changePercent > 0 ? '↑' : '↓'} ${Math.abs(changePercent)}% change from last period
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <strong style="color: #bd93f9;">💡 Optimization Recommendation:</strong>
+                        <p style="margin-top: 8px; line-height: 1.6;">${recommendation}</p>
+                    </div>
+
+                    <div style="background: rgba(102, 126, 234, 0.15); padding: 16px; border-radius: 8px;">
+                        <strong style="color: #667eea;">📋 Recommended Actions:</strong>
+                        <ul style="margin-top: 12px; padding-left: 20px; line-height: 1.8;">
+                            <li>Review ${service} usage patterns and identify unused resources</li>
+                            <li>Consider Reserved Instances or Savings Plans for predictable workloads</li>
+                            <li>Enable cost allocation tags for better tracking</li>
+                            <li>Set up CloudWatch alarms for unusual spending patterns</li>
+                            <li>Implement auto-scaling to optimize resource utilization</li>
+                        </ul>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(16, 185, 129, 0.15); border-radius: 8px; border-left: 3px solid #10b981;">
+                        <strong style="color: #10b981;">💰 Potential Savings:</strong>
+                        <p style="margin-top: 8px;">By implementing the recommendations above, you could potentially save <strong>15-30%</strong> on your ${service} costs.</p>
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <strong>📊 Cost Trend Analysis:</strong>
+                        <p style="margin-top: 8px; color: #6272a4;">Monitor this service closely as it shows ${changePercent > 0 ? 'an upward' : 'a downward'} trend. ${changePercent > 5 ? 'Consider immediate optimization actions.' : 'Current trend is within acceptable range.'}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('costModalTitle').textContent = `${service} - Detailed Cost Analysis`;
+            document.getElementById('costModalBody').innerHTML = modalBody;
+            document.getElementById('costModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        async function refreshData() {
+            document.getElementById('loading').classList.add('show');
             document.getElementById('status-text').textContent = 'Updating...';
-            const data = generateMockData();
+            
+            const data = await fetchData();
+            
             setTimeout(() => {
-                updateDashboard(data);
-                document.getElementById('status-text').textContent = 'Live';
+                if (data) {
+                    updateDashboard(data);
+                    document.getElementById('status-text').textContent = 'Live';
+                }
+                document.getElementById('loading').classList.remove('show');
             }, 500);
         }
 
-        function showDetails(type) {
-            alert(`Showing details for: ${type}\n\nThis would open a modal with detailed information in the full implementation.`);
-        }
+        // Close modal on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal('errorModal');
+                closeModal('costModal');
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('errorModal').addEventListener('click', (e) => {
+            if (e.target.id === 'errorModal') {
+                closeModal('errorModal');
+            }
+        });
+
+        document.getElementById('costModal').addEventListener('click', (e) => {
+            if (e.target.id === 'costModal') {
+                closeModal('costModal');
+            }
+        });
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initCharts();
-            refreshData();
+            await refreshData();
             // Auto-refresh every 30 seconds
             setInterval(refreshData, 30000);
         });
