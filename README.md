@@ -103,3 +103,9 @@ A static dashboard fetches `final_report.json` from S3 and renders interactive v
 - Python – Backend analysis  
 - Chart.js – Interactive visualizations  
 - Frontend – Static HTML, CSS, JavaScript
+
+## 🎥 YouTube Video
+
+Check out the full walkthrough and demo of **Cloud Insight AI** on YouTube:
+
+▶️ **Watch here:** https://youtu.be/7EAaSQkCl3Q
