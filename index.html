@@ -593,11 +593,64 @@
             .grid { grid-template-columns: 1fr; }
             .card.span-2, .card.span-4 { grid-column: span 1; }
         }
+
+        /* Warning Banner Styles */
+        .warning-banner {
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .warning-banner a {
+            color: #1a1a2e;
+            text-decoration: underline;
+            font-weight: 700;
+        }
+
+        .warning-banner a:hover {
+            color: #1e1e2e;
+        }
+
+        .close-banner-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .close-banner-btn:hover {
+            transform: translateY(-50%) scale(1.2);
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
     <div class="loading" id="loading">
         <div class="spinner"></div>
+    </div>
+
+    <div class="warning-banner" id="freeTierWarning">
+        <strong>Important:</strong> Due to the AWS Free Tier ending, live data processing and interactive graphs are not currently available.
+        For a full demonstration, please watch our <a href="https://youtu.be/7EAaSQkCl3Q" target="_blank">YouTube video</a>.
+        The dashboard will display static, placeholder data.
+        <button class="close-banner-btn" onclick="document.getElementById('freeTierWarning').style.display='none';">&times;</button>
     </div>
 
     <div class="dashboard">

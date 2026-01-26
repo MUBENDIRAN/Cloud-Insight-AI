@@ -10,6 +10,14 @@
 Cloud Insight AI is a containerized cloud monitoring and analysis tool that processes cost and log data, generates AI-assisted insights, and visualizes the results on a web dashboard.
 
 ---
+**Important Note:** Due to the AWS free tier period concluding, the backend services (including data storage on AWS S3 and ECS for analysis) are no longer actively running. This means that live data processing and interactive graphs cannot be demonstrated on the hosted frontend.
+
+For a comprehensive demonstration of Cloud Insight AI in action, including live data visualizations and functionality, please refer to the project's walkthrough video:
+
+▶️ **Watch the full demo here:** https://youtu.be/7EAaSQkCl3Q
+---
+
+---
 
 ## How It Works
 
@@ -109,8 +117,3 @@ A static dashboard fetches `final_report.json` from S3 and renders interactive v
 - Chart.js – Interactive visualizations  
 - Frontend – Static HTML, CSS, JavaScript
 
-## 🎥 YouTube Video
-
-Check out the full walkthrough and demo of **Cloud Insight AI** on YouTube:
-
-▶️ **Watch here:** https://youtu.be/7EAaSQkCl3Q
