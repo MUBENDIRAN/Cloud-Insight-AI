@@ -1,4 +1,5 @@
 {
+  "S3_REPORT_URL": "https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json",
   "analysis_config": {
     "log_files_to_analyze": [
       "production.log",

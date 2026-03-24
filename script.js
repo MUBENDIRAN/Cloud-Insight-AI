@@ -1,4 +1,19 @@
-const S3_REPORT_URL = 'https://ci-ai-reports.s3.ap-south-1.amazonaws.com/final_report.json';
+let S3_REPORT_URL = '';
+
+async function loadConfig() {
+  const res = await fetch('config.json');
+  const config = await res.json();
+  S3_REPORT_URL = config.S3_REPORT_URL;
+}
+
+async function init() {
+  await loadConfig();
+
+  // your existing code runs after this
+}
+
+init();
+
 const REFRESH_INTERVAL_MS = 30000;
 
 const elements = {
