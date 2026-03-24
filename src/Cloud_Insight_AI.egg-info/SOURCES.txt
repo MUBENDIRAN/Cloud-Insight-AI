@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+src/analyzer.py
+src/comprehend_client.py
+src/config_loader.py
+src/cost_processor.py
+src/json_report_generator.py
+src/log_processor.py
+src/notification_handler.py
+src/Cloud_Insight_AI.egg-info/PKG-INFO
+src/Cloud_Insight_AI.egg-info/SOURCES.txt
+src/Cloud_Insight_AI.egg-info/dependency_links.txt
+src/Cloud_Insight_AI.egg-info/requires.txt
+src/Cloud_Insight_AI.egg-info/top_level.txt
