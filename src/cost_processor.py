@@ -196,7 +196,7 @@ stable, indicating consistent workload patterns.
         # Check for expensive services
         total = sum(service_totals.values())
         for service, cost in service_totals.items():
-            if cost / total > 0.3:  # More than 30% of total
+            if total != 0 and cost / total > 0.3:  # More than 30% of total
                 recommendations.append(
                     f"  • {service} accounts for {(cost/total)*100:.1f}% of "
                     f"total costs - consider reserved instances or savings plans"
