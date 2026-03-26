@@ -1,119 +1,193 @@
-<p>
-  <img src="cloud.png" alt="Cloud Insight AI Logo" width="80" align="left">
-</p>
+# ☁️ Cloud Insight AI
 
-# Cloud Insight AI
->
+**AI-powered AWS cost and log analysis - Use as a Python library OR web dashboard**
 
-
-
-Cloud Insight AI is a containerized cloud monitoring and analysis tool that processes cost and log data, generates AI-assisted insights, and visualizes the results on a web dashboard.
-
----
-**Important Note:** Due to the AWS free tier period concluding, the backend services (including data storage on AWS S3 and ECS for analysis) are no longer actively running. This means that live data processing and interactive graphs cannot be demonstrated on the hosted frontend.
-
-For a comprehensive demonstration of Cloud Insight AI in action, including live data visualizations and functionality, please refer to the project's walkthrough video:
-
-▶️ **Watch the full demo here:** https://youtu.be/7EAaSQkCl3Q
----
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![GitHub Stars](https://img.shields.io/github/stars/MUBENDIRAN/Cloud-Insight-AI?style=social)](https://github.com/MUBENDIRAN/Cloud-Insight-AI/stargazers)
 
 ---
 
-## How It Works
+## 🎯 Two Ways to Use
 
-### 1. Configuration
-The application is controlled using a YAML configuration file.  
-This file defines:
-- cost and log data sources  
-- error and cost thresholds  
-- feature toggles (AI insights, notifications)  
-- output and reporting settings  
+### 1️⃣ **Python Library** (Pip Install)
+Use Cloud Insight AI in your Python code for programmatic analysis.
 
-### 2. Containerized Execution
-The backend runs inside a Docker container.  
-GitHub Actions builds the Docker image and pushes it to Amazon ECR.
-
-### 3. Analyzer Orchestration
-Inside the container, `analyzer.py` acts as the entry point and coordinates:
-- configuration loading  
-- cost analysis  
-- log processing  
-- optional AI-based insights  
-- report generation  
-
-### 4. Cost Analysis
-Cost data from `data/cost.json` is analyzed to identify trends and anomalies.
-
-### 5. Log Analysis
-Application, performance, and security logs are parsed to detect errors, warnings, and recurring issues.
-
-### 6. AI-Powered Insights
-AWS Comprehend is used to extract sentiment, key phrases, and entities from analysis summaries.
-
-### 7. Report & Metadata Generation
-The analyzer generates:
-- `final_report.json` – frontend-ready analysis output  
-- `final_report.txt` – human-readable summary  
-- `config.json` – JSON representation of the active configuration  
-
-### 8. Storage in S3
-Generated JSON artifacts are uploaded to Amazon S3, which acts as a static data source for the dashboard.
-
-### 9. Frontend Visualization
-A static dashboard fetches `final_report.json` from S3 and renders interactive visualizations.
+### 2️⃣ **Web Dashboard** (Cloud-Based)
+Run the interactive web interface for visual analysis and insights.
 
 ---
 
-## Architecture
+## 📦 Library Mode (Pip Package)
 
-![Architecture Diagram](architechture.png)
+### Installation
 
----
-
-## Project Structure
-
+```bash
+pip install cloud-insight-ai
 ```
-  ├── README.md
-  ├── _push.sh
-  ├── architechture.png
-  ├── cloud.png
-  ├── config.json
-  ├── config.yaml
-  ├── data
-  │   ├── cost.json
-  │   ├── logs.txt
-  │   ├── performance-logs.txt
-  │   └── security-logs.txt
-  ├── docker
-  │   └── Dockerfile
-  ├── final_report.json
-  ├── index.html
-  ├── package-lock.json
-  ├── requirements.txt
-  ├── script.js
-  ├── src
-  │   ├── analyzer.py
-  │   ├── comprehend_client.py
-  │   ├── config_loader.py
-  │   ├── cost_processor.py
-  │   ├── json_report_generator.py
-  │   ├── log_processor.py
-  │   └── notification_handler.py
-  └── style.css
+
+### Usage
+
+```python
+from cloud_insight_ai import CloudAnalyzer
+
+# Analyze your data
+analyzer = CloudAnalyzer()
+results = analyzer.run(cost_data, logs)
+cost_data = [
+    {'service': 'EC2', 'date': '2025-01-01', 'cost': 150.25},
+    {'service': 'S3', 'date': '2025-01-01', 'cost': 45.50},
+]
+
+logs = [
+    '2025-01-01 10:00:00 [INFO] Application started',
+    '2025-01-01 10:05:30 [ERROR] Connection timeout',
+]
+
+# Analyze
+analyzer = CloudAnalyzer()
+result = analyzer.run(cost_data, logs)
+
+# Results
+print(f"Total cost: ${result['summary']['total_cost']:.2f}")
+print(f"Errors: {result['summary']['error_count']}")
+print(f"Alerts: {result['summary']['alert_count']}")
 ```
 
 ---
 
-## Tech Stack
+## 📚 Documentation
 
-- AWS S3 – Stores analysis reports and configuration artifacts  
-- Amazon ECR – Docker image registry  
-- Amazon ECS – Executes the containerized analyzer  
-- AWS IAM – Permissions for ECS, S3, ECR, and CI/CD  
-- AWS Comprehend – Optional NLP-based insight generation  
-- GitHub Actions – CI/CD pipeline  
-- Docker – Containerization  
-- Python – Backend analysis  
-- Chart.js – Interactive visualizations  
-- Frontend – Static HTML, CSS, JavaScript
+### Basic Usage
 
+```python
+# Full analysis
+analyzer = CloudAnalyzer()
+result = analyzer.run(cost_data, logs)
+```
+
+### Cost Analysis Only
+
+```python
+from cloud_insight_ai import analyze_cost
+
+cost_result = analyze_cost(cost_data)
+print(f"Total: ${cost_result['total_cost']:.2f}")
+print(f"Top service: {cost_result['highest_cost_service']}")
+```
+
+### Log Analysis Only
+
+```python
+from cloud_insight_ai import analyze_logs
+
+log_result = analyze_logs(logs)
+print(f"Errors: {log_result['error_count']}")
+print(f"Warnings: {log_result['warning_count']}")
+```
+
+### With Configuration
+
+```python
+config = {
+    'cost_thresholds': {
+        'high_cost_service_percent': 30.0
+    },
+    'log_thresholds': {
+        'max_error_count': 15,
+        'max_warning_count': 25
+    },
+    'error_patterns': [
+        {'name': 'Connection Issues', 'keywords': ['connection', 'timeout']},
+        {'name': 'Permission Errors', 'keywords': ['AccessDenied', 'unauthorized']}
+    ]
+}
+
+analyzer = CloudAnalyzer(config=config)
+result = analyzer.run(cost_data, logs)
+
+# Check alerts
+for alert in result['alerts']:
+    print(f"[{alert['severity'].upper()}] {alert['message']}")
+```
+
+---
+
+## 📊 Result Structure
+
+```python
+{
+    'cost': {
+        'total_cost': 280.75,
+        'service_totals': {'EC2': 150.25, 'S3': 45.50, 'RDS': 85.00},
+        'daily_costs': {'2025-01-01': 280.75},
+        'highest_cost_service': 'EC2',
+        'highest_cost': 150.25
+    },
+    'logs': {
+        'total_entries': 100,
+        'error_count': 5,
+        'warning_count': 10,
+        'log_levels': {'INFO': 85, 'ERROR': 5, 'WARNING': 10},
+        'recommendations': '...'
+    },
+    'alerts': [
+        {'severity': 'high', 'category': 'cost', 'message': '...'}
+    ],
+    'summary': {
+        'total_cost': 280.75,
+        'total_services': 3,
+        'total_log_entries': 100,
+        'error_count': 5,
+        'warning_count': 10,
+        'alert_count': 1
+    }
+}
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=cloud_insight_ai
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+**MUBENDIRAN**
+- GitHub: [@MUBENDIRAN](https://github.com/MUBENDIRAN)
+- Email: mubiii7722@gmail.com
+
+---
+
+
+## ⭐ Show Your Support
+
+If this project helped you, please consider giving it a ⭐ on [GitHub](https://github.com/MUBENDIRAN/Cloud-Insight-AI)!
+
+---
+
+<p align="center">Made with ❤️ by MUBENDIRAN</p>

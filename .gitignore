@@ -1,4 +1,112 @@
-*.sh
-working.mp4
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+# Specifically ignore old package name artifacts
+src/Cloud_Insight_AI.egg-info/
+# Ignore test virtual environments
+test_env/
+test_pypi_env/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+
+# Type checking
+.mypy_cache/
+
+# Data files (ignore actual data, keep structure)
+data/*.json
+data/*.txt
+!data/.gitkeep
+!data/README.md
+
+# Output files
+final_report.json
+final_report.txt
+*.log
+
+# Temporary files
+*.tmp
+.cache/
+tmp/
+*.bak
+
+# Build artifacts
+.build_progress.json
+
+# OS files
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Secrets
+*.pem
+*.key
+secrets.yaml
+
+# Node (frontend dependencies)
+node_modules/
+
+# Media files (images, videos) - keep locally but don't push to GitHub
 *.png
-ci-ai(logo).png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.avi
+*.mov
+*.webm
+
+# Keep logo in README if needed (uncomment and specify exact file)
+# !ci-ai-logo.png
+
+dependency_links.txt 
+PKG-INFO
+SOURCES.txt
+top_level.txt
+
+build/*
+resolve_merge.bat
