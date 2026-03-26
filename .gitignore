@@ -22,6 +22,11 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+# Specifically ignore old package name artifacts
+src/Cloud_Insight_AI.egg-info/
+# Ignore test virtual environments
+test_env/
+test_pypi_env/
 
 # Virtual environments
 venv/
@@ -97,3 +102,11 @@ node_modules/
 
 # Keep logo in README if needed (uncomment and specify exact file)
 # !ci-ai-logo.png
+
+dependency_links.txt 
+PKG-INFO
+SOURCES.txt
+top_level.txt
+
+build/*
+resolve_merge.bat
