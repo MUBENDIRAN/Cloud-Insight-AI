@@ -1,0 +1,92 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Documentation
+docs/_build/
+
+# Data files (keep templates only)
+data/*
+!data/.gitkeep
+!data/README.md
+
+# Output files
+final_report.json
+final_report.txt
+*.log
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Temporary files
+*.tmp
+.cache/
+tmp/
+
+# Documentation that doesn't need to be in Docker
+README.md
+README_LIBRARY.md
+LIBRARY_TRANSFORMATION.md
+PROVIDER_ARCHITECTURE.md
+LICENSE
+CONTRIBUTING.md
+
+# Frontend files (not needed in Docker)
+index.html
+script.js
+style.css
+*.png
+*.jpg
+*.gif
+*.mp4
+
+# Scripts
+_push.sh
+_setup_tests.py

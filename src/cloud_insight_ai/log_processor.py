@@ -5,6 +5,93 @@ Log Processor - Analyzes multiple system log sources
 
 import re
 from collections import Counter, defaultdict
+from typing import List, Dict, Any, Optional
+
+
+def analyze_logs(logs: List[str], error_patterns: Optional[List[Dict]] = None) -> Dict[str, Any]:
+    """
+    Analyze log entries and return summary.
+    
+    Args:
+        logs: List of log line strings
+        error_patterns: Optional list of error patterns to detect
+        
+    Returns:
+        Dictionary with log analysis results
+    """
+    if not logs:
+        return {
+            'total_entries': 0,
+            'error_count': 0,
+            'warning_count': 0,
+            'log_levels': {},
+            'error_patterns': {},
+            'text_summary': 'No log data available',
+            'recommendations': 'No logs to analyze'
+        }
+    
+    # Count log levels
+    log_levels = Counter()
+    errors = []
+    warnings = []
+    
+    for line in logs:
+        line_upper = line.upper()
+        
+        if 'ERROR' in line_upper:
+            log_levels['ERROR'] += 1
+            errors.append(line)
+        elif 'WARNING' in line_upper or 'WARN' in line_upper:
+            log_levels['WARNING'] += 1
+            warnings.append(line)
+        elif 'INFO' in line_upper:
+            log_levels['INFO'] += 1
+        elif 'DEBUG' in line_upper:
+            log_levels['DEBUG'] += 1
+        elif 'CRITICAL' in line_upper or 'FATAL' in line_upper:
+            log_levels['CRITICAL'] += 1
+            errors.append(line)
+    
+    # Detect error patterns if provided
+    pattern_matches = {}
+    if error_patterns:
+        for pattern in error_patterns:
+            pattern_name = pattern.get('name', 'Unknown')
+            keywords = pattern.get('keywords', [])
+            count = 0
+            
+            for line in errors:
+                line_lower = line.lower()
+                if any(keyword.lower() in line_lower for keyword in keywords):
+                    count += 1
+            
+            if count > 0:
+                pattern_matches[pattern_name] = count
+    
+    error_count = log_levels['ERROR'] + log_levels.get('CRITICAL', 0)
+    warning_count = log_levels['WARNING']
+    
+    # Generate recommendations
+    recommendations = []
+    if error_count > 10:
+        recommendations.append(f"High error count detected ({error_count} errors)")
+    if warning_count > 20:
+        recommendations.append(f"High warning count detected ({warning_count} warnings)")
+    
+    recommendations_text = "; ".join(recommendations) if recommendations else "No immediate issues detected"
+    
+    # Generate summary
+    summary = f"Analyzed {len(logs)} log entries: {error_count} errors, {warning_count} warnings"
+    
+    return {
+        'total_entries': len(logs),
+        'error_count': error_count,
+        'warning_count': warning_count,
+        'log_levels': dict(log_levels),
+        'error_patterns': pattern_matches,
+        'text_summary': summary,
+        'recommendations': recommendations_text
+    }
 
 
 class LogProcessor:

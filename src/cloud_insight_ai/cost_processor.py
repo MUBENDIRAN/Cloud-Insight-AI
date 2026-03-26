@@ -6,6 +6,59 @@ Cost Processor - Analyzes AWS billing data
 import json
 from collections import defaultdict
 from datetime import datetime
+from typing import List, Dict, Any
+
+
+def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Analyze cost data and return summary.
+    
+    Args:
+        cost_data: List of cost records with 'service', 'date', 'cost' keys
+        
+    Returns:
+        Dictionary with cost analysis results
+    """
+    if not cost_data:
+        return {
+            'total_cost': 0,
+            'service_totals': {},
+            'daily_costs': {},
+            'highest_cost_service': None,
+            'highest_cost': 0,
+            'text_summary': 'No cost data available'
+        }
+    
+    # Aggregate costs
+    service_totals = defaultdict(float)
+    daily_costs = defaultdict(float)
+    
+    for record in cost_data:
+        service = record.get('service', 'Unknown')
+        date = record.get('date', 'Unknown')
+        cost = float(record.get('cost', 0))
+        
+        service_totals[service] += cost
+        daily_costs[date] += cost
+    
+    # Find highest cost service
+    highest_service = max(service_totals.items(), key=lambda x: x[1]) if service_totals else (None, 0)
+    
+    total_cost = sum(service_totals.values())
+    
+    # Generate text summary
+    summary = f"Total cost: ${total_cost:.2f} across {len(service_totals)} services. "
+    if highest_service[0]:
+        summary += f"Highest cost service: {highest_service[0]} (${highest_service[1]:.2f})"
+    
+    return {
+        'total_cost': total_cost,
+        'service_totals': dict(service_totals),
+        'daily_costs': dict(daily_costs),
+        'highest_cost_service': highest_service[0],
+        'highest_cost': highest_service[1],
+        'text_summary': summary
+    }
 
 
 class CostProcessor:
