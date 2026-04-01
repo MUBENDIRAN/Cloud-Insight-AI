@@ -1,0 +1,126 @@
+name: Release to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-release:
+    name: Validate Release Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify release tag matches package version
+        if: github.event_name == 'release'
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          package_version = data["project"]["version"]
+          release_tag = "${{ github.event.release.tag_name }}"
+          normalized_tag = release_tag[1:] if release_tag.startswith("v") else release_tag
+
+          if normalized_tag != package_version:
+            raise SystemExit(
+              f"Release tag '{release_tag}' does not match project version '{package_version}'"
+            )
+
+          print(f"Version check passed: {release_tag} -> {package_version}")
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+          pytest
+
+      - name: Build distributions
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*
+
+      - name: Validate package contents
+        run: |
+          python - <<'PY'
+          import pathlib
+          import tarfile
+          import zipfile
+
+          dist = pathlib.Path("dist")
+          sdist = next(dist.glob("*.tar.gz"), None)
+          wheel = next(dist.glob("*.whl"), None)
+
+          assert sdist is not None, "sdist artifact missing"
+          assert wheel is not None, "wheel artifact missing"
+
+          with tarfile.open(sdist, "r:gz") as tf:
+            sdist_names = tf.getnames()
+          with zipfile.ZipFile(wheel) as zf:
+            wheel_names = zf.namelist()
+
+          required_sdist = [
+            "pyproject.toml",
+            "README.md",
+            "src/cloud_insight_ai/__init__.py",
+          ]
+          required_wheel = [
+            "cloud_insight_ai/__init__.py",
+            "cloud_insight_ai/py.typed",
+          ]
+
+          for filename in required_sdist:
+            if not any(name.endswith(filename) for name in sdist_names):
+              raise AssertionError(f"Missing {filename} in sdist")
+
+          for filename in required_wheel:
+            if not any(name.endswith(filename) for name in wheel_names):
+              raise AssertionError(f"Missing {filename} in wheel")
+
+          print("Release artifact content validation passed")
+          PY
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: validate-release
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

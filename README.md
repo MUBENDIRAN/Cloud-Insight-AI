@@ -161,6 +161,30 @@ pytest --cov=cloud_insight_ai
 
 ---
 
+## 🚀 Release Automation
+
+This project uses GitHub Actions to automate quality checks and publishing.
+
+- `CI` workflow (`.github/workflows/ci.yml`)
+    - Runs tests on Python 3.8 to 3.12
+    - Builds both `sdist` and `wheel`
+    - Runs `twine check` to validate package metadata
+    - Verifies key files are present in the built distributions
+- `Release to PyPI` workflow (`.github/workflows/release-pypi.yml`)
+    - Triggers on published GitHub Releases (or manual dispatch)
+    - Runs tests and build validation again for release safety
+    - Publishes only after the `pypi` environment is approved
+    - Uses PyPI Trusted Publishing (OIDC), so no PyPI API token is stored in repository secrets
+
+### One-time setup for maintainers
+
+1. In PyPI, configure this repository as a Trusted Publisher.
+2. In GitHub, create an environment named `pypi`.
+3. Add required reviewers to the `pypi` environment for release approval.
+4. Publish a GitHub Release to trigger deployment to PyPI.
+
+---
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

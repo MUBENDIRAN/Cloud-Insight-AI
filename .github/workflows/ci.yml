@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+
+      - name: Run test suite
+        run: pytest
+
+  package-validation:
+    name: Build and Validate Package
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build package artifacts
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+          python -m build
+
+      - name: Validate package metadata
+        run: twine check dist/*
+
+      - name: Validate package contents
+        run: |
+          python - <<'PY'
+          import pathlib
+          import tarfile
+          import zipfile
+
+          dist = pathlib.Path("dist")
+          sdist = next(dist.glob("*.tar.gz"), None)
+          wheel = next(dist.glob("*.whl"), None)
+
+          assert sdist is not None, "sdist artifact missing"
+          assert wheel is not None, "wheel artifact missing"
+
+          with tarfile.open(sdist, "r:gz") as tf:
+            sdist_names = tf.getnames()
+          with zipfile.ZipFile(wheel) as zf:
+            wheel_names = zf.namelist()
+
+          required_sdist = [
+            "pyproject.toml",
+            "README.md",
+            "src/cloud_insight_ai/__init__.py",
+          ]
+          required_wheel = [
+            "cloud_insight_ai/__init__.py",
+            "cloud_insight_ai/py.typed",
+          ]
+
+          for filename in required_sdist:
+            if not any(name.endswith(filename) for name in sdist_names):
+              raise AssertionError(f"Missing {filename} in sdist")
+
+          for filename in required_wheel:
+            if not any(name.endswith(filename) for name in wheel_names):
+              raise AssertionError(f"Missing {filename} in wheel")
+
+          print("Package content validation passed")
+          PY
+
+      - name: Test install from built wheel
+        run: |
+          pip install --force-reinstall dist/*.whl
+          python -c "import cloud_insight_ai; print(cloud_insight_ai.__version__)"

@@ -261,6 +261,35 @@ pytest tests/test_analyzer.py
 pytest tests/test_analyzer.py::test_cost_analysis
 ```
 
+### CI Package Validation
+
+All pull requests and changes to `main` are validated by GitHub Actions:
+
+- Test matrix on Python 3.8 to 3.12
+- Distribution build (`sdist` + `wheel`)
+- Metadata validation using `twine check`
+- Distribution content verification for required package files
+
+If CI fails, please fix the reported issue before requesting review.
+
+---
+
+## 📦 Release Process
+
+PyPI publishing is automated and gated:
+
+1. Create or update release-ready changes.
+2. Publish a GitHub Release.
+3. The `Release to PyPI` workflow runs tests and package validations.
+4. A maintainer approves the protected `pypi` environment.
+5. The package is published to PyPI using Trusted Publishing (OIDC).
+
+### Security Model
+
+- No PyPI API token is stored in repository secrets.
+- Publishing uses short-lived OIDC credentials via `pypa/gh-action-pypi-publish`.
+- Only approved runs in the `pypi` environment can publish.
+
 ### Writing Tests
 
 Place tests in the `tests/` directory:
