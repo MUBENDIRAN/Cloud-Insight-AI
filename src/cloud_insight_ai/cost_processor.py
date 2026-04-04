@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import List, Dict, Any
 
 
-def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def analyze_cost(cost_data: List[Dict[str, Any]], threshold: float = 0):
     """
     Analyze cost data and return summary.
     
@@ -34,6 +34,9 @@ def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     daily_costs = defaultdict(float)
     
     for record in cost_data:
+        if not isinstance(record, dict):
+            continue  # skip invalid entries
+    
         service = record.get('service', 'Unknown')
         date = record.get('date', 'Unknown')
         cost = float(record.get('cost', 0))
@@ -152,7 +155,7 @@ class CostProcessor:
             first_cost = sorted_records[0]['cost']
             last_cost = sorted_records[-1]['cost']
             
-            change_percent = ((last_cost - first_cost) / first_cost) * 100
+            change_percent = ((last_cost - first_cost) / first_cost) * 100 if first_cost != 0 else 0
             
             if change_percent > 5:
                 direction = 'increasing'
