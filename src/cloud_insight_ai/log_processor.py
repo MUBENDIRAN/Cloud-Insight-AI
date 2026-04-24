@@ -8,12 +8,12 @@ from collections import Counter, defaultdict
 from typing import List, Dict, Any, Optional
 
 
-def analyze_logs(logs: List[str], error_patterns: Optional[List[Dict]] = None) -> Dict[str, Any]:
+def analyze_logs(logs: List[Any], error_patterns: Optional[List[Dict]] = None) -> Dict[str, Any]:
     """
     Analyze log entries and return summary.
     
     Args:
-        logs: List of log line strings
+        logs: List of log entries (string lines or structured dict objects)
         error_patterns: Optional list of error patterns to detect
         
     Returns:
@@ -35,22 +35,29 @@ def analyze_logs(logs: List[str], error_patterns: Optional[List[Dict]] = None) -
     errors = []
     warnings = []
     
-    for line in logs:
-        line_upper = line.upper()
+    for entry in logs:
+        if isinstance(entry, dict):
+            level = str(entry.get('level', '')).upper()
+            message = str(entry.get('message', ''))
+            line_text = f"{level} {message}".strip()
+        else:
+            line_text = str(entry)
+        
+        line_upper = line_text.upper()
         
         if 'ERROR' in line_upper:
             log_levels['ERROR'] += 1
-            errors.append(line)
+            errors.append(line_text)
         elif 'WARNING' in line_upper or 'WARN' in line_upper:
             log_levels['WARNING'] += 1
-            warnings.append(line)
+            warnings.append(line_text)
         elif 'INFO' in line_upper:
             log_levels['INFO'] += 1
         elif 'DEBUG' in line_upper:
             log_levels['DEBUG'] += 1
         elif 'CRITICAL' in line_upper or 'FATAL' in line_upper:
             log_levels['CRITICAL'] += 1
-            errors.append(line)
+            errors.append(line_text)
     
     # Detect error patterns if provided
     pattern_matches = {}

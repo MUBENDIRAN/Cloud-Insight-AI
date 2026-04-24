@@ -6,15 +6,19 @@ Cost Processor - Analyzes AWS billing data
 import json
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Union
 
 
-def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+def analyze_cost(
+    cost_data: Union[List[Dict[str, Any]], Dict[str, Any]],
+    threshold: Optional[float] = None
+) -> Dict[str, Any]:
     """
     Analyze cost data and return summary.
     
     Args:
-        cost_data: List of cost records with 'service', 'date', 'cost' keys
+        cost_data: List of cost records or dict payload containing 'costs'/'periods'
+        threshold: Optional per-service threshold for high-cost flagging
         
     Returns:
         Dictionary with cost analysis results
@@ -29,13 +33,45 @@ def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
             'text_summary': 'No cost data available'
         }
     
+    # Support both list payloads and legacy dict payloads used by older callers/tests.
+    if isinstance(cost_data, dict):
+        if isinstance(cost_data.get('costs'), list):
+            records = cost_data['costs']
+        elif isinstance(cost_data.get('periods'), list):
+            records = [
+                {
+                    'service': 'Unknown',
+                    'date': period.get('period', 'Unknown'),
+                    'cost': period.get('cost', 0),
+                }
+                for period in cost_data['periods']
+                if isinstance(period, dict)
+            ]
+        else:
+            records = []
+    else:
+        records = cost_data
+    
+    if not records:
+        return {
+            'total_cost': 0,
+            'service_totals': {},
+            'daily_costs': {},
+            'highest_cost_service': None,
+            'highest_cost': 0,
+            'text_summary': 'No cost data available'
+        }
+    
     # Aggregate costs
     service_totals = defaultdict(float)
     daily_costs = defaultdict(float)
     
-    for record in cost_data:
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        
         service = record.get('service', 'Unknown')
-        date = record.get('date', 'Unknown')
+        date = record.get('date', record.get('period', 'Unknown'))
         cost = float(record.get('cost', 0))
         
         service_totals[service] += cost
@@ -51,7 +87,7 @@ def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
     if highest_service[0]:
         summary += f"Highest cost service: {highest_service[0]} (${highest_service[1]:.2f})"
     
-    return {
+    result = {
         'total_cost': total_cost,
         'service_totals': dict(service_totals),
         'daily_costs': dict(daily_costs),
@@ -59,6 +95,14 @@ def analyze_cost(cost_data: List[Dict[str, Any]]) -> Dict[str, Any]:
         'highest_cost': highest_service[1],
         'text_summary': summary
     }
+    
+    if threshold is not None:
+        result['threshold'] = threshold
+        result['over_threshold_services'] = [
+            service for service, cost in service_totals.items() if cost > threshold
+        ]
+    
+    return result
 
 
 class CostProcessor:
