@@ -85,9 +85,10 @@ class CloudAnalyzer:
         high_cost_percent = cost_thresholds.get('high_cost_service_percent', 30.0)
         
         total_cost = cost_result['total_cost']
+        
         if total_cost > 0:
             for service, cost in cost_result['service_totals'].items():
-                percent = (cost / total_cost) * 100
+                percent = (cost / total_cost) * 100 if total_cost > 0 else 0
                 if percent > high_cost_percent:
                     alerts.append({
                         'severity': 'high',

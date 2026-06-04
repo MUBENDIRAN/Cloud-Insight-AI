@@ -289,13 +289,18 @@ stable, indicating consistent workload patterns.
         
         # Check for expensive services
         total = sum(service_totals.values())
+    
         for service, cost in service_totals.items():
-            if cost / total > 0.3:  # More than 30% of total
+
+            percentage = (cost / total) * 100 if total > 0 else 0
+
+            if percentage > 30:
                 recommendations.append(
-                    f"  • {service} accounts for {(cost/total)*100:.1f}% of "
+                    f"  • {service} accounts for {percentage:.1f}% of "
                     f"total costs - consider reserved instances or savings plans"
                 )
         
+    
         if not recommendations:
             recommendations.append(
                 "  • Cost trends are stable - continue monitoring for anomalies"
