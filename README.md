@@ -33,8 +33,6 @@ pip install cloud-insight-ai
 from cloud_insight_ai import CloudAnalyzer
 
 # Analyze your data
-analyzer = CloudAnalyzer()
-results = analyzer.run(cost_data, logs)
 cost_data = [
     {'service': 'EC2', 'date': '2025-01-01', 'cost': 150.25},
     {'service': 'S3', 'date': '2025-01-01', 'cost': 45.50},
