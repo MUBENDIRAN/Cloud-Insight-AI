@@ -173,6 +173,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 📚 PyPI
+
+cloud-insight-ai: https://share.google/RdHoMur8M7VqzECDU
+
 ## 👤 Author
 
 **MUBENDIRAN**
